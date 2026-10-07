@@ -83,8 +83,10 @@ function checkCommon({ rel, parsed, expectedName, kind, plugin }) {
   if (isEmpty(name)) findings.push(`${rel}: missing frontmatter name`);
   else if (name !== expectedName) findings.push(`${rel}: ${kind} name "${name}" does not match "${expectedName}"`);
   if (isEmpty(description)) findings.push(`${rel}: missing or empty frontmatter description`);
-  if (plugin === SENTENCE_PLUGIN && !parsed.body.includes(RULES_SENTENCE)) {
-    findings.push(`${rel}: missing the rules-file sentence: ${RULES_SENTENCE}`);
+  if (plugin === SENTENCE_PLUGIN) {
+    const count = parsed.body.split(RULES_SENTENCE).length - 1;
+    if (count === 0) findings.push(`${rel}: missing the rules-file sentence: ${RULES_SENTENCE}`);
+    else if (count > 1) findings.push(`${rel}: the rules-file sentence occurs ${count} times, not once`);
   }
   return findings;
 }

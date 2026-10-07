@@ -11,8 +11,6 @@ metadata:
 
 Read `.claude/tether-nx.md` first; where it differs from this file, it wins.
 
-Read `.claude/tether-nx.md` first; where it differs from this file, it wins.
-
 A practical guide to building Angular apps everyone can use. Two layers: **WCAG fundamentals**
 (the HTML/CSS you author) and **Angular tooling & patterns** (CDK, Aria, router, custom components).
 Target is **WCAG 2.x AA**.
@@ -323,5 +321,3 @@ Use a visually hidden class (`position: absolute; width: 1px; height: 1px; overf
 - Deque – [axe rules](https://dequeuniversity.com/rules/axe/)
 - Local – [WCAG 2.2 criteria and ARIA patterns](references/WCAG.md) · [code patterns](references/A11Y-PATTERNS.md)
 - web.dev – [Learn Accessibility](https://web.dev/learn/accessibility) · Contrast checker – [whocanuse.com](https://www.whocanuse.com/)
-
----

@@ -119,6 +119,17 @@ test('a tether-nx skill or agent without the rules-file sentence is reported', (
   ]);
 });
 
+test('a tether-nx skill or agent with the rules-file sentence twice is reported', () => {
+  const result = findings({
+    'plugins/tether-nx/skills/beta/SKILL.md': skill('beta', RULES_SENTENCE),
+    'plugins/tether-nx/agents/worker.md': agent('worker', '', RULES_SENTENCE),
+  });
+  assert.deepEqual(result, [
+    'plugins/tether-nx/skills/beta/SKILL.md: the rules-file sentence occurs 2 times, not once',
+    'plugins/tether-nx/agents/worker.md: the rules-file sentence occurs 2 times, not once',
+  ]);
+});
+
 test('a file without frontmatter is reported', () => {
   const result = findings({ 'plugins/other/skills/plain/SKILL.md': '# Plain\n' });
   assert.deepEqual(result, ['plugins/other/skills/plain/SKILL.md: no frontmatter block between a first-line --- and a closing ---']);

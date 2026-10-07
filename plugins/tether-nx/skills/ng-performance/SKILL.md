@@ -11,8 +11,6 @@ metadata:
 
 Read `.claude/tether-nx.md` first; where it differs from this file, it wins.
 
-Read `.claude/tether-nx.md` first; where it differs from this file, it wins.
-
 A practical guide to making Angular apps fast. Two domains: **initial load** (how fast the
 first meaningful paint and interactivity arrive) and **runtime** (how smoothly the app reacts
 once loaded). Each fix follows **Problem → Identify → Fix → Verify (re-measure)** – always
@@ -248,5 +246,3 @@ Subscribe in a field initializer/constructor; if you need `@Input`s, use `ngOnIn
 - Angular – [NgOptimizedImage](https://angular.dev/guide/image-optimization), [Lazy loading](https://angular.dev/guide/routing/common-router-tasks#lazy-loading), [Deferrable views](https://angular.dev/guide/templates/defer), [SSR & hydration](https://angular.dev/guide/ssr), [Skipping subtrees](https://angular.dev/best-practices/skipping-subtrees), [Zone pollution](https://angular.dev/best-practices/zone-pollution), [Zoneless](https://angular.dev/guide/zoneless)
 - CDK – [Virtual scrolling](https://material.angular.dev/cdk/scrolling/overview)
 - `ngx-quicklink` – [npm](https://www.npmjs.com/package/ngx-quicklink)
-
----
