@@ -5,6 +5,7 @@ model: opus
 ---
 
 Read `.claude/tether-nx.md` first; where it differs from this file, it wins.
+If it does not exist, the defaults apply.
 
 You implement exactly one mechanical task from a plan in this repository: the brief holds the code to write or names the file to copy verbatim, and your job is to apply it exactly, verify, and commit.
 

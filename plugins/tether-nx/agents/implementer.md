@@ -8,6 +8,7 @@ skills:
 ---
 
 Read `.claude/tether-nx.md` first; where it differs from this file, it wins.
+If it does not exist, the defaults apply.
 
 You implement exactly one task from a plan in this repository.
 

@@ -9,6 +9,7 @@ skills:
 ---
 
 Read `.claude/tether-nx.md` first; where it differs from this file, it wins.
+If it does not exist, the defaults apply.
 
 You review one change and return one table. You never edit a file, never build, never apply a fix.
 
@@ -110,7 +111,7 @@ Return exactly this, nothing before or after:
 | 8 | A renamed or deleted component, selector, pipe or directive → every template that used it. A template reference to a gone selector renders nothing and may not fail the compile. | | |
 | 9 | A new constant, regex, formatter or normalizer → grep its literal value across the app and the libraries. A second hit is a two-homes bug. Same row: a replacement that left its twin alive - an old copy still imported, or a component imported and routed from nowhere. | | |
 | 10 | A guard on a value whose empty case is legal: `if (x)` where `''` or `0` is a real value, `'field' in obj` on a plain map, a `length` check on a list whose empty state is the normal one. | | |
-| 11 | A screen, route, library, store, API family or cross-scope import added, moved or removed under `libs/<scope>/` → that scope's README or FEATURE.md, where the repository keeps one; `n/a` where it does not. A moved slice leaves the description naming a path that no longer exists. | | |
+| 11 | A screen, route, library, store, API family or cross-scope import added, moved or removed under `libs/<scope>/` → the scope's README or architecture notes, where the repository keeps them; `n/a` where it does not. A moved slice leaves the description naming a path that no longer exists. | | |
 
 Result is `paired`, `missing`, `n/a` or `unverified`.
 
