@@ -1,6 +1,7 @@
 // SubagentStop: counts the stops of an implementerAgents agent per session and task (the first `# Task <id>` heading of its prompt).
 // Stops that continue because a stop hook sent the agent back (stop_hook_active) are not counted.
 // Exit 2 with one stderr paragraph once more than fixRoundCap fix rounds follow the first stop; exit 0 otherwise and on any missing input.
+import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -32,23 +33,25 @@ export function taskFromTranscript(jsonl) {
   return null;
 }
 
-function readRounds(file) {
+export function roundsFile(dataDir, key) {
+  return join(dataDir, 'rounds', `${createHash('sha1').update(key).digest('hex')}.json`);
+}
+
+function readCount(file) {
   try {
-    const rounds = JSON.parse(readFileSync(file, 'utf8'));
-    return rounds !== null && typeof rounds === 'object' && !Array.isArray(rounds) ? rounds : {};
+    const count = JSON.parse(readFileSync(file, 'utf8'))?.count;
+    return Number.isInteger(count) ? count : 0;
   } catch {
-    return {};
+    return 0;
   }
 }
 
 export function recordStop(dataDir, key) {
-  mkdirSync(dataDir, { recursive: true });
-  const file = join(dataDir, 'rounds.json');
-  const rounds = readRounds(file);
-  const count = (Number.isInteger(rounds[key]) ? rounds[key] : 0) + 1;
-  rounds[key] = count;
+  const file = roundsFile(dataDir, key);
+  mkdirSync(join(dataDir, 'rounds'), { recursive: true });
+  const count = readCount(file) + 1;
   const temp = `${file}.${process.pid}.tmp`;
-  writeFileSync(temp, `${JSON.stringify(rounds, null, 2)}\n`);
+  writeFileSync(temp, `${JSON.stringify({ key, count })}\n`);
   renameSync(temp, file);
   return count;
 }

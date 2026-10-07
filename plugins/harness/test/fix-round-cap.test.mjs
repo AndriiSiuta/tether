@@ -1,17 +1,20 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { evaluate, taskFromTranscript } from '../scripts/fix-round-cap.mjs';
+import { evaluate, roundsFile, taskFromTranscript } from '../scripts/fix-round-cap.mjs';
 
 const CLI = join(dirname(fileURLToPath(import.meta.url)), '..', 'scripts', 'fix-round-cap.mjs');
 const CONFIG = { implementerAgents: ['web-implementer', 'web-implementer-mechanical'], fixRoundCap: 2 };
 const BLOCKED = '2 fix rounds used on Task 3; stop and escalate to Andrii with the failing check.\n';
 
 let sandbox;
+
+const countOf = (data, key) => JSON.parse(readFileSync(roundsFile(data, key), 'utf8')).count;
+const noRounds = (data) => assert.throws(() => readdirSync(join(data, 'rounds')));
 let counter = 0;
 
 function fresh(name) {
@@ -80,7 +83,8 @@ test('the fourth stop of a task is blocked with the cap message', () => {
   assert.deepEqual(results.map((r) => r.status), [0, 0, 0, 2]);
   assert.equal(results[3].stderr, BLOCKED);
   assert.equal(results.slice(0, 3).map((r) => r.stdout + r.stderr).join(''), '');
-  assert.deepEqual(JSON.parse(readFileSync(join(data, 'rounds.json'), 'utf8')), { 'session-a|Task 3': 4 });
+  assert.equal(countOf(data, 'session-a|Task 3'), 4);
+  assert.equal(readdirSync(join(data, 'rounds')).length, 1);
 });
 
 test('a continuation stop (stop_hook_active) is not counted', () => {
@@ -91,7 +95,7 @@ test('a continuation stop (stop_hook_active) is not counted', () => {
   const continued = runCli(stop(project, transcript, { stop_hook_active: true }), data);
   assert.equal(continued.status, 0);
   assert.equal(continued.stderr, '');
-  assert.deepEqual(JSON.parse(readFileSync(join(data, 'rounds.json'), 'utf8')), { 'session-a|Task 3': 3 });
+  assert.equal(countOf(data, 'session-a|Task 3'), 3);
   assert.equal(runCli(stop(project, transcript), data).status, 2);
 });
 
@@ -99,7 +103,7 @@ test('an agent outside implementerAgents is ignored', () => {
   const data = fresh('data');
   const transcript = makeTranscript('### Task 3');
   for (let i = 0; i < 5; i += 1) assert.equal(evaluate(stop('/x', transcript, { agent_type: 'Explore' }), CONFIG, data), null);
-  assert.throws(() => readFileSync(join(data, 'rounds.json')));
+  noRounds(data);
 });
 
 test('sessions are counted apart', () => {
@@ -108,6 +112,8 @@ test('sessions are counted apart', () => {
   for (let i = 0; i < 3; i += 1) assert.equal(evaluate(stop('/x', transcript), CONFIG, data), null);
   for (let i = 0; i < 3; i += 1) assert.equal(evaluate(stop('/x', transcript, { session_id: 'session-b' }), CONFIG, data), null);
   assert.equal(evaluate(stop('/x', transcript, { session_id: 'session-b' }), CONFIG, data), BLOCKED.trimEnd());
+  assert.equal(countOf(data, 'session-a|Task 3'), 3);
+  assert.equal(countOf(data, 'session-b|Task 3'), 4);
 });
 
 test('a missing transcript, no task heading or no data dir exits 0 without counting', () => {
@@ -117,7 +123,7 @@ test('a missing transcript, no task heading or no data dir exits 0 without count
   assert.equal(missing.status, 0);
   assert.equal(missing.stdout + missing.stderr, '');
   assert.equal(evaluate(stop(project, makeTranscript('no heading')), CONFIG, data), null);
-  assert.throws(() => readFileSync(join(data, 'rounds.json')));
+  noRounds(data);
   const transcript = makeTranscript('### Task 3');
   const env = { ...process.env };
   delete env.CLAUDE_PLUGIN_DATA;
@@ -136,7 +142,8 @@ test('malformed stdin, no harness.json or a malformed rounds file fail open', ()
   }
   const transcript = makeTranscript('### Task 3');
   assert.equal(runCli(stop(fresh('no-config'), transcript), data).status, 0);
-  writeFileSync(join(data, 'rounds.json'), '{ broken');
+  mkdirSync(join(data, 'rounds'), { recursive: true });
+  writeFileSync(roundsFile(data, 'session-a|Task 3'), '{ broken');
   assert.equal(evaluate(stop('/x', transcript), CONFIG, data), null);
-  assert.deepEqual(JSON.parse(readFileSync(join(data, 'rounds.json'), 'utf8')), { 'session-a|Task 3': 1 });
+  assert.equal(countOf(data, 'session-a|Task 3'), 1);
 });

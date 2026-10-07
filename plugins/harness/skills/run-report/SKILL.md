@@ -59,3 +59,4 @@ Agent ids: 1=<agent id>, 2=<agent id>
 3. Rulings are numbered in the order they were made, each with its cost if wrong.
 4. The click-through list is the union of every implementer's `Deferred:` items, without duplicates.
 5. The sign-off table stays empty until the person who verifies the run has done the click-through. Then add one row: the tip SHA that was verified (7 to 40 hex characters), the date, the name, and the checklist items that were checked. A later fix adds a new row for its new tip.
+6. The fix-round cap counts an implementer's stops per session and task, so a new session starts every task at zero. To reset a cap after an escalation within the same session, delete that task's file under `${CLAUDE_PLUGIN_DATA}/rounds/` (named by the SHA-1 of `<session_id>|Task <id>`) and record the reset as a ruling.
