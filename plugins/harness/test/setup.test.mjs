@@ -1,7 +1,7 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -167,6 +167,41 @@ test('without a TTY and without --yes the CLI exits 3 and writes nothing', () =>
   assert.equal(result.status, 3);
   assert.match(result.stderr, /confirm the diff, then re-run with --yes/);
   assert.ok(!existsSync(userSettings(dirs.home)));
+});
+
+test('without a TTY, --yes or --only every part prints its diff before one exit 3', async () => {
+  const dirs = fresh();
+  const result = await setup([], dirs);
+  assert.equal(result.code, 3);
+  assert.match(result.out, /telemetry: .*\(new file\)/);
+  assert.match(result.out, /\+ permissions\.deny \(\+2\)/);
+  assert.match(result.out, /mcp-pins: no MCP servers/);
+  assert.match(result.out, /\+ sandbox\.enabled/);
+  assert.equal(result.err.match(/confirm the diff, then re-run with --yes/g)?.length, 1);
+  assert.ok(!existsSync(userSettings(dirs.home)));
+  assert.ok(!existsSync(localSettings(dirs.project)));
+});
+
+test('a write keeps the target mode and leaves no temp file', async () => {
+  const dirs = fresh();
+  writeJson(userSettings(dirs.home), { model: 'opus' });
+  chmodSync(userSettings(dirs.home), 0o600);
+  const result = await setup(['--only', 'telemetry', '--yes'], dirs);
+  assert.equal(result.code, 0);
+  assert.equal(statSync(userSettings(dirs.home)).mode & 0o777, 0o600);
+  assert.deepEqual(readJson(userSettings(dirs.home)).env, TELEMETRY_ENV);
+  assert.deepEqual(readdirSync(join(dirs.home, '.claude')).sort(), ['settings.json', 'settings.json.bak-20261007-0905']);
+});
+
+test('a write through a symlinked target replaces the file it points to', async () => {
+  const dirs = fresh();
+  const real = join(sandbox, `real-settings-${counter}.json`);
+  writeJson(real, { model: 'opus' });
+  symlinkSync(real, userSettings(dirs.home));
+  const result = await setup(['--only', 'telemetry', '--yes'], dirs);
+  assert.equal(result.code, 0);
+  assert.ok(lstatSync(userSettings(dirs.home)).isSymbolicLink());
+  assert.deepEqual(readJson(real).env, TELEMETRY_ENV);
 });
 
 test('a TTY answer of no skips the write', async () => {

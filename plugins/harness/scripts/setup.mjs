@@ -1,9 +1,10 @@
 // CLI: node setup.mjs [--only telemetry|deny|mcp-pins|sandbox] [--user] [--dry-run] [--yes] [--project <dir>]
-// Prints a key-level diff per part, then backs up, writes and re-reads the target on confirmation.
-// Exit 0 done or unchanged, 1 on a malformed target or bad arguments, 3 when a change needs --yes without a TTY.
+// Prints a key-level diff per part, then backs up, writes atomically and re-reads the target on confirmation.
+// Exit 0 done or unchanged, 1 on a malformed target or bad arguments, 3 once after every diff when a change needs --yes without a TTY.
 import { execFileSync } from 'node:child_process';
-import { copyFileSync, constants, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { randomBytes } from 'node:crypto';
+import { chmodSync, copyFileSync, constants, existsSync, mkdirSync, readFileSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { basename, dirname, join, resolve } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { pathToFileURL } from 'node:url';
 import { findConfig } from './lib/config.mjs';
@@ -189,6 +190,20 @@ function writeBackup(file, home, date) {
   }
 }
 
+export function writeAtomic(file, content) {
+  const target = existsSync(file) ? realpathSync(file) : file;
+  const mode = existsSync(target) ? statSync(target).mode & 0o7777 : undefined;
+  const temp = join(dirname(target), `.${basename(target)}.tmp-${process.pid}-${randomBytes(4).toString('hex')}`);
+  try {
+    writeFileSync(temp, content, { flag: 'wx' });
+    if (mode !== undefined) chmodSync(temp, mode);
+    renameSync(temp, target);
+  } catch (error) {
+    rmSync(temp, { force: true });
+    throw error;
+  }
+}
+
 export function parseArgs(argv) {
   const args = { user: false, dryRun: false, yes: false };
   for (let i = 0; i < argv.length; i += 1) {
@@ -261,17 +276,14 @@ async function runPart(part, ctx) {
   for (const line of lines) out(`  ${line}`);
   if (ctx.dryRun) return 0;
   const answer = await confirm(part, ctx);
-  if (answer === null) {
-    ctx.stderr.write('confirm the diff, then re-run with --yes\n');
-    return 3;
-  }
+  if (answer === null) return 3;
   if (!answer) {
     out(`${part}: skipped`);
     return 0;
   }
   const backup = exists ? writeBackup(file, ctx.home, ctx.now()) : undefined;
   mkdirSync(dirname(file), { recursive: true });
-  writeFileSync(file, `${JSON.stringify(next, null, 2)}\n`);
+  writeAtomic(file, `${JSON.stringify(next, null, 2)}\n`);
   const reread = readTarget(file).data;
   const settled = diffKeys(next, reread).length === 0 && diffKeys(reread, next).length === 0;
   out(`${part}: ${settled ? 'wrote' : 'wrote, but the re-read differs:'} ${file}${backup ? ` (backup ${backup})` : ''}`);
@@ -308,17 +320,21 @@ export async function main(argv, deps = {}) {
     stderr.write('setup: HOME is not set\n');
     return 1;
   }
+  let unconfirmed = false;
   for (const part of args.only === undefined ? PARTS : [args.only]) {
     try {
       const code = await runPart(part, ctx);
-      if (code !== 0) return code;
+      if (code === 3) unconfirmed = true;
+      else if (code !== 0) return code;
     } catch (error) {
       if (!(error instanceof MalformedTargetError)) throw error;
       stderr.write(`setup: ${error.message}\n`);
       return 1;
     }
   }
-  return 0;
+  if (!unconfirmed) return 0;
+  stderr.write('confirm the diff, then re-run with --yes\n');
+  return 3;
 }
 
 async function askOnTerminal(question) {
