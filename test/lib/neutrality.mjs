@@ -11,7 +11,6 @@ export const ALLOWED_SCOPES = new Set([
   'angular-devkit',
   'nx',
   'ngrx',
-  'ngxs',
   'ngx-translate',
   'typescript-eslint',
   'types',

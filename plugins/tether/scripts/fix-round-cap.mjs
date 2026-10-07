@@ -7,7 +7,7 @@ import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { loadHookContext, readStdinJson } from './lib/config.mjs';
 
-const TASK_HEADING = /^#+\s+(Task\s+[\w.-]+)/m;
+const TASK_HEADING = /^#+\s+(Task\s+\d[\w.-]*)/m;
 
 function textOf(content) {
   if (typeof content === 'string') return content;

@@ -75,6 +75,13 @@ test('the task id comes from the first user entry, string or text blocks', () =>
   assert.equal(taskFromTranscript('not json\n'), null);
 });
 
+test('a heading without a task number does not key a count', () => {
+  const line = (content) => JSON.stringify({ type: 'user', message: { role: 'user', content } });
+  assert.equal(taskFromTranscript(line('# Plan\n## Task order\n| # | Task |')), null);
+  assert.equal(taskFromTranscript(line('## Task order\n\n## Task 4: Write the spec\n')), 'Task 4');
+  assert.equal(taskFromTranscript(line('## Task 12b: Split\n')), 'Task 12b');
+});
+
 test('the fourth stop of a task is blocked with the cap message', () => {
   const project = makeProject();
   const data = fresh('data');

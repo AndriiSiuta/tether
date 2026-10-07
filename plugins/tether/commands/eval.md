@@ -12,5 +12,5 @@ Run the eval tasks in two passes. Only the dry run is pre-approved; the real run
 3. Ask the user whether to run them, and whether in the background here or in their own terminal. Stop unless they answer yes.
 4. The run outlasts the Bash tool's foreground limit, so never run it in the foreground.
    - Here: run `node ${CLAUDE_PLUGIN_ROOT}/scripts/eval-run.mjs $ARGUMENTS` from the project directory with the Bash tool's `run_in_background` set. When it finishes, show its table and the results file path exactly as printed, then the file's `## Change vs` section if it has one.
-   - His terminal: give him that command with `${CLAUDE_PLUGIN_ROOT}` expanded to the plugin's absolute path, to run from the project directory, and stop.
+   - The user's terminal: give the user that command with `${CLAUDE_PLUGIN_ROOT}` expanded to the plugin's absolute path, to run from the project directory, and stop.
 5. A run that is interrupted removes its current worktree; the next run sweeps any `eval-*` worktree left in the scratch directory.
