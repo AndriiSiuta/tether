@@ -1,13 +1,15 @@
 import { test, before, after, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync, spawnSync } from 'node:child_process';
+import { execFileSync, spawn, spawnSync } from 'node:child_process';
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { setTimeout as delay } from 'node:timers/promises';
 import { costOf, parseResults, selectTasks, validateTask } from '../scripts/eval-run.mjs';
 
-const CLI = join(dirname(fileURLToPath(import.meta.url)), '..', 'scripts', 'eval-run.mjs');
+const PLUGIN = join(dirname(fileURLToPath(import.meta.url)), '..');
+const CLI = join(PLUGIN, 'scripts', 'eval-run.mjs');
 const CLOSED = 'http://127.0.0.1:1';
 const TASKS_DIR = 'private/evals/tasks';
 const RESULTS_DIR = 'private/evals/results';
@@ -37,19 +39,19 @@ function writeTask(file, value) {
   writeFileSync(join(repo, TASKS_DIR, file), typeof value === 'string' ? value : JSON.stringify(value));
 }
 
-function runCli(args, env = {}) {
-  return spawnSync(process.execPath, [CLI, '--scratch', scratch, ...args], {
-    cwd: repo,
-    encoding: 'utf8',
-    env: {
+function cliEnv(env) {
+  return {
       ...process.env,
       PATH: `${bin}:${process.env.PATH}`,
       CLAUDE_PROJECT_DIR: repo,
       HARNESS_OTEL_ENDPOINTS: JSON.stringify({ prometheus: CLOSED, tempo: CLOSED, loki: CLOSED }),
       FAKE_LOG: log,
       ...env,
-    },
-  });
+  };
+}
+
+function runCli(args, env = {}) {
+  return spawnSync(process.execPath, [CLI, '--scratch', scratch, ...args], { cwd: repo, encoding: 'utf8', env: cliEnv(env) });
 }
 
 const today = () => {
@@ -92,9 +94,11 @@ const fs = require('node:fs');
 const brief = fs.readFileSync(0, 'utf8');
 fs.mkdirSync('src', { recursive: true });
 fs.writeFileSync('src/out.txt', brief);
-fs.appendFileSync(process.env.FAKE_LOG, JSON.stringify({ args: process.argv.slice(2), brief, config: fs.existsSync('.claude/harness.json'), deps: fs.existsSync('deps/lib.js') }) + '\\n');
-process.stdout.write(JSON.stringify({ type: 'result', session_id: 's-1', result: 'Found the MISSING KEY in en-GB.', usage: { input_tokens: 1000, output_tokens: 500 }, duration_ms: 2000 }));
-process.exit(Number(process.env.FAKE_CLAUDE_EXIT ?? 0));
+fs.appendFileSync(process.env.FAKE_LOG, JSON.stringify({ args: process.argv.slice(2), brief, config: fs.existsSync('.claude/harness.json'), deps: fs.existsSync('deps/lib.js'), projectDir: 'CLAUDE_PROJECT_DIR' in process.env }) + '\\n');
+setTimeout(() => {
+  process.stdout.write(JSON.stringify({ type: 'result', session_id: 's-1', result: 'Found the MISSING KEY in en-GB.', usage: { input_tokens: 1000, output_tokens: 500 }, duration_ms: 2000 }));
+  process.exit(Number(process.env.FAKE_CLAUDE_EXIT ?? 0));
+}, Number(process.env.FAKE_CLAUDE_SLEEP ?? 0));
 `);
   chmodSync(join(bin, 'claude'), 0o755);
 });
@@ -148,6 +152,7 @@ test('a run writes the results file and removes its worktree', () => {
   assert.equal(call.brief, 'Write src/out.txt.');
   assert.equal(call.config, true);
   assert.equal(call.deps, true);
+  assert.equal(call.projectDir, false);
   assert.deepEqual(readdirSync(scratch), []);
   assert.equal(worktrees(), 1);
 });
@@ -212,4 +217,67 @@ test('the change section compares against the previous results file', () => {
   assert.match(md, /^\| t1 \| no → yes \| \+50\.0 % \|$/m);
   assert.match(md, /^\| t2 \| new: yes \| – \|$/m);
   assert.equal(parseResults(md).get('t1').Tokens, '1,500');
+});
+
+test('costOf falls back per field when telemetry reports zero', async () => {
+  const output = { session_id: 's', usage: { input_tokens: 10, output_tokens: 5 }, duration_ms: 1500 };
+  assert.deepEqual(await costOf(output, { up: true, totals: async () => ({ tokens: 0, wallMs: 0 }) }), { tokens: 15, wallMs: 1500 });
+  assert.deepEqual(await costOf(output, { up: true, totals: async () => ({ tokens: 42, wallMs: 0 }) }), { tokens: 42, wallMs: 1500 });
+  assert.deepEqual(await costOf(output, { up: true, totals: async () => ({ tokens: 0, wallMs: 7 }) }), { tokens: 15, wallMs: 7 });
+});
+
+test('an agent that outlasts --timeout is killed, scored as failed with a note, and its worktree removed', () => {
+  writeTask('01-t1.json', task());
+  const started = Date.now();
+  const result = runCli(['--timeout', '0.005'], { FAKE_CLAUDE_SLEEP: '20000' });
+  assert.equal(result.status, 0, result.stderr);
+  assert.ok(Date.now() - started < 15000);
+  assert.match(result.stderr, /agent timed out after 0\.005 min, killed/);
+  assert.match(readFileSync(join(repo, RESULTS_DIR, `${today()}.md`), 'utf8'), /^\| t1 \| web-implementer \| no \(agent timed out after 0\.005 min\) \|/m);
+  assert.deepEqual(readdirSync(scratch), []);
+  assert.equal(worktrees(), 1);
+});
+
+test('a bad --timeout is a usage error', () => {
+  assert.equal(runCli(['--timeout', '0']).status, 2);
+});
+
+test('SIGTERM while the agent runs removes the worktree and exits 143', async () => {
+  writeTask('01-t1.json', task());
+  const child = spawn(process.execPath, [CLI, '--scratch', scratch], { cwd: repo, env: cliEnv({ FAKE_CLAUDE_SLEEP: '30000' }), stdio: ['ignore', 'pipe', 'pipe'] });
+  const exited = new Promise((resolveExit) => child.on('close', (code, signal) => resolveExit({ code, signal })));
+  for (let i = 0; i < 200 && !existsSync(log); i++) await delay(25);
+  assert.ok(existsSync(log), 'the fake agent never started');
+  assert.equal(readdirSync(scratch).length, 1);
+  child.kill('SIGTERM');
+  const { code } = await exited;
+  assert.equal(code, 143);
+  assert.deepEqual(readdirSync(scratch), []);
+  assert.equal(worktrees(), 1);
+  assert.equal(existsSync(join(repo, RESULTS_DIR)), false);
+});
+
+test('a run sweeps stale eval worktrees under the scratch dir and leaves others', () => {
+  writeTask('01-t1.json', task());
+  mkdirSync(scratch, { recursive: true });
+  const stale = join(scratch, 'eval-old-1');
+  const other = join(scratch, 'keep-1');
+  git(repo, 'worktree', 'add', '-q', '--detach', stale, base);
+  git(repo, 'worktree', 'add', '-q', '--detach', other, base);
+  try {
+    const result = runCli([]);
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stderr, /removed stale worktree .*eval-old-1/);
+    assert.deepEqual(readdirSync(scratch), ['keep-1']);
+    assert.equal(worktrees(), 2);
+  } finally {
+    git(repo, 'worktree', 'remove', '--force', other);
+  }
+});
+
+test('/harness:eval pre-approves the dry run only', () => {
+  const text = readFileSync(join(PLUGIN, 'commands', 'eval.md'), 'utf8');
+  const line = text.split('\n').find((l) => l.startsWith('allowed-tools:'));
+  assert.deepEqual(JSON.parse(line.slice('allowed-tools:'.length).trim()), ['Bash(node ${CLAUDE_PLUGIN_ROOT}/scripts/eval-run.mjs --dry-run:*)']);
+  assert.match(text, /run_in_background/);
 });

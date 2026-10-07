@@ -1,10 +1,10 @@
-// CLI: node eval-run.mjs [--tasks <id>[,<id>…]] [--agent <name>] [--all] [--dry-run] [--scratch <dir>]; runs frozen tasks in throwaway worktrees.
+// CLI: node eval-run.mjs [--tasks <id>[,<id>…]] [--agent <name>] [--all] [--dry-run] [--scratch <dir>] [--timeout <min>]; frozen tasks in throwaway worktrees.
 // Writes <evals.results>/<YYYY-MM-DD>.md; HARNESS_OTEL_ENDPOINTS (JSON) overrides the telemetry endpoints.
-// Exit 0 when the selected tasks ran or were listed, 1 without harness.json or a runnable task, 2 on usage.
-import { spawnSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, symlinkSync, writeFileSync } from 'node:fs';
+// Exit 0 when the tasks ran or were listed, 1 without harness.json or a runnable task, 2 on usage, 130/143 on SIGINT/SIGTERM.
+import { spawn, spawnSync } from 'node:child_process';
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { basename, dirname, join, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { findConfig } from './lib/config.mjs';
 import { sessionTotals, telemetryUp } from './lib/otel.mjs';
@@ -13,6 +13,10 @@ import { endpointsFromEnv } from './ledger-from-otel.mjs';
 const BASE_RE = /^[0-9a-f]{7,40}$/;
 const HEADER = ['Task', 'Agent', 'Pass', 'Paths', 'Caught', 'Tokens', 'Wall time'];
 const MAX_BUFFER = 256 * 1024 * 1024;
+const DEFAULT_TIMEOUT_MIN = 30;
+const KILL_GRACE_MS = 5000;
+const SIGNAL_EXIT = { SIGINT: 130, SIGTERM: 143 };
+const active = { child: undefined, worktree: undefined, root: undefined };
 
 const isStringArray = (value) => Array.isArray(value) && value.every((item) => typeof item === 'string');
 const fmt = (n) => Math.round(n).toLocaleString('en-US');
@@ -31,7 +35,7 @@ export function validateTask(task) {
 }
 
 export function parseArgs(argv) {
-  const args = { tasks: undefined, agent: undefined, all: false, dryRun: false, scratch: join(tmpdir(), 'harness-evals') };
+  const args = { tasks: undefined, agent: undefined, all: false, dryRun: false, scratch: join(tmpdir(), 'harness-evals'), timeoutMin: DEFAULT_TIMEOUT_MIN };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     const next = () => {
@@ -45,6 +49,11 @@ export function parseArgs(argv) {
     else if (arg === '--all') args.all = true;
     else if (arg === '--dry-run') args.dryRun = true;
     else if (arg === '--scratch') args.scratch = resolve(next());
+    else if (arg === '--timeout') {
+      const minutes = Number(next());
+      if (!Number.isFinite(minutes) || minutes <= 0) throw new Error('--timeout needs a positive number of minutes');
+      args.timeoutMin = minutes;
+    }
     else throw new Error(`unknown argument ${arg}`);
   }
   return args;
@@ -91,6 +100,70 @@ function git(cwd, args) {
   const result = run('git', args, { cwd, stdio: ['ignore', 'pipe', 'pipe'] });
   if (result.status !== 0) throw new Error(`git ${args.join(' ')}: ${(result.stderr ?? '').trim()}`);
   return result.stdout;
+}
+
+export function runAsync(cmd, args, { cwd, input, env = process.env, timeoutMs } = {}) {
+  return new Promise((resolvePromise) => {
+    const child = spawn(cmd, args, { cwd, env, stdio: ['pipe', 'pipe', 'pipe'] });
+    active.child = child;
+    let stdout = '';
+    let stderr = '';
+    let timedOut = false;
+    let killer;
+    const timer = timeoutMs === undefined ? undefined : setTimeout(() => {
+      timedOut = true;
+      child.kill('SIGTERM');
+      killer = setTimeout(() => child.kill('SIGKILL'), KILL_GRACE_MS);
+    }, timeoutMs);
+    child.stdout.setEncoding('utf8').on('data', (chunk) => { stdout += chunk; });
+    child.stderr.setEncoding('utf8').on('data', (chunk) => { stderr += chunk; });
+    child.stdin.on('error', () => {});
+    child.stdin.end(input ?? '');
+    const finish = (status, error) => {
+      clearTimeout(timer);
+      clearTimeout(killer);
+      if (active.child === child) active.child = undefined;
+      resolvePromise({ status, stdout, stderr, timedOut, error });
+    };
+    child.on('error', (error) => finish(null, error));
+    child.on('close', (status) => finish(status, undefined));
+  });
+}
+
+export function childEnv(env = process.env) {
+  const { CLAUDE_PROJECT_DIR, ...rest } = env;
+  return rest;
+}
+
+function removeWorktree(root, worktree) {
+  return run('git', ['worktree', 'remove', '--force', worktree], { cwd: root, stdio: ['ignore', 'pipe', 'pipe'] });
+}
+
+const realOrSelf = (path) => {
+  try {
+    return realpathSync(path);
+  } catch {
+    return path;
+  }
+};
+
+export function sweepStale(root, scratch) {
+  const prefix = realOrSelf(scratch) + sep;
+  const listed = git(root, ['worktree', 'list', '--porcelain']).split('\n').filter((l) => l.startsWith('worktree ')).map((l) => l.slice('worktree '.length));
+  const stale = listed.filter((path) => realOrSelf(path).startsWith(prefix) && basename(path).startsWith('eval-'));
+  for (const path of stale) {
+    const removed = removeWorktree(root, path);
+    if (removed.status !== 0) process.stderr.write(`could not remove stale ${path}: ${(removed.stderr ?? '').trim()}\n`);
+  }
+  git(root, ['worktree', 'prune']);
+  return stale;
+}
+
+export function onSignal(signal) {
+  if (active.child !== undefined) active.child.kill('SIGKILL');
+  if (active.worktree !== undefined) removeWorktree(active.root, active.worktree);
+  process.stderr.write(`${signal}: removed ${active.worktree ?? 'no worktree'}\n`);
+  process.exit(SIGNAL_EXIT[signal] ?? 1);
 }
 
 const covers = (entry, path) => path === entry || path.startsWith(`${entry.replace(/\/$/, '')}/`);
@@ -142,17 +215,21 @@ function usageTokens(usage) {
 }
 
 export async function costOf(output, { up, totals }) {
+  const duration = Number(output.duration_ms);
+  const fallback = { tokens: usageTokens(output.usage), wallMs: Number.isFinite(duration) ? duration : undefined };
   if (up && typeof output.session_id === 'string') {
     try {
       const fromOtel = await totals(output.session_id);
-      if (fromOtel) return { tokens: fromOtel.tokens, wallMs: fromOtel.wallMs };
+      if (fromOtel) return {
+        tokens: fromOtel.tokens > 0 ? fromOtel.tokens : fallback.tokens,
+        wallMs: fromOtel.wallMs > 0 ? fromOtel.wallMs : fallback.wallMs,
+      };
     } catch {}
   }
-  const wallMs = Number(output.duration_ms);
-  return { tokens: usageTokens(output.usage), wallMs: Number.isFinite(wallMs) ? wallMs : undefined };
+  return fallback;
 }
 
-export async function runTask(task, { root, config, scratch, epoch, up, totals, claude = 'claude' }) {
+export async function runTask(task, { root, config, scratch, epoch, up, totals, claude = 'claude', timeoutMin = DEFAULT_TIMEOUT_MIN }) {
   const evals = config.evals ?? {};
   const worktree = worktreePath(scratch, task.id, epoch);
   const ignored = [...(config.localOnlyPaths ?? []), ...(evals.symlink ?? [])];
@@ -161,13 +238,23 @@ export async function runTask(task, { root, config, scratch, epoch, up, totals, 
   try {
     git(root, ['worktree', 'add', '--detach', worktree, task.base]);
     created = true;
+    Object.assign(active, { worktree, root });
     prepareWorktree(root, worktree, { localOnlyPaths: config.localOnlyPaths ?? [], symlink: evals.symlink ?? [] });
-    const agentRun = run(claude, ['-p', '--agent', task.agent, '--output-format', 'json', '--permission-mode', 'acceptEdits'], { cwd: worktree, input: task.brief, stdio: ['pipe', 'pipe', 'pipe'] });
+    const agentRun = await runAsync(claude, ['-p', '--agent', task.agent, '--output-format', 'json', '--permission-mode', 'acceptEdits'], {
+      cwd: worktree,
+      input: task.brief,
+      env: childEnv(),
+      timeoutMs: timeoutMin * 60_000,
+    });
+    if (agentRun.timedOut) row.note = `agent timed out after ${timeoutMin} min`;
     if (agentRun.error) process.stderr.write(`task ${task.id}: ${agentRun.error.message}\n`);
+    else if (agentRun.timedOut) process.stderr.write(`task ${task.id}: ${row.note}, killed\n`);
     else if (agentRun.status !== 0) process.stderr.write(`task ${task.id}: the agent exited ${agentRun.status}\n`);
-    const output = parseAgentOutput(agentRun.stdout ?? '');
-    const verify = run('bash', ['-c', verifyCommandFor(config, task.base)], { cwd: worktree, stdio: ['ignore', 'pipe', 'pipe'] });
-    row.pass = verify.status === 0;
+    const output = parseAgentOutput(agentRun.stdout);
+    if (!agentRun.timedOut) {
+      const verify = await runAsync('bash', ['-c', verifyCommandFor(config, task.base)], { cwd: worktree });
+      row.pass = verify.status === 0;
+    }
     const changed = changedPaths(worktree, task.base, ignored);
     const { pathsHit, caught } = score(task, changed, output.result);
     row.paths = `${pathsHit}/${task.expectPaths.length}`;
@@ -177,13 +264,20 @@ export async function runTask(task, { root, config, scratch, epoch, up, totals, 
     row.error = error.message;
     process.stderr.write(`task ${task.id}: ${error.message}\n`);
   } finally {
+    Object.assign(active, { worktree: undefined, root: undefined });
     if (created) {
-      const removed = run('git', ['worktree', 'remove', '--force', worktree], { cwd: root, stdio: ['ignore', 'pipe', 'pipe'] });
+      const removed = removeWorktree(root, worktree);
       if (removed.status !== 0) process.stderr.write(`task ${task.id}: could not remove ${worktree}: ${(removed.stderr ?? '').trim()}\n`);
     }
   }
   return row;
 }
+
+const passLabel = (row) => {
+  if (row.error) return 'error';
+  if (row.note) return `no (${row.note})`;
+  return row.pass ? 'yes' : 'no';
+};
 
 const cell = (value) => String(value).replaceAll('|', '\\|');
 const tableLine = (cells) => `| ${cells.map(cell).join(' | ')} |`;
@@ -194,7 +288,7 @@ export function renderRows(rows) {
     lines.push(tableLine([
       row.id,
       row.agent,
-      row.error ? 'error' : row.pass ? 'yes' : 'no',
+      passLabel(row),
       row.paths,
       row.caught,
       row.tokens === undefined ? '–' : fmt(row.tokens),
@@ -235,7 +329,7 @@ export function renderChange(rows, previousName, previousMd) {
   const lines = [`## Change vs ${previousName}`, '', '| Task | Pass | Tokens |', '|---|---|---|'];
   for (const row of rows) {
     const before = previous.get(row.id);
-    const passNow = row.error ? 'error' : row.pass ? 'yes' : 'no';
+    const passNow = passLabel(row);
     if (before === undefined) {
       lines.push(tableLine([row.id, `new: ${passNow}`, '–']));
       continue;
@@ -276,7 +370,7 @@ async function main(argv) {
   try {
     args = parseArgs(argv);
   } catch (error) {
-    process.stderr.write(`${error.message}\nusage: node eval-run.mjs [--tasks <id>[,<id>…]] [--agent <name>] [--all] [--dry-run] [--scratch <dir>]\n`);
+    process.stderr.write(`${error.message}\nusage: node eval-run.mjs [--tasks <id>[,<id>…]] [--agent <name>] [--all] [--dry-run] [--scratch <dir>] [--timeout <min>]\n`);
     return 2;
   }
   const found = findConfig(process.env.CLAUDE_PROJECT_DIR ?? process.cwd());
@@ -303,13 +397,16 @@ async function main(argv) {
     return 0;
   }
   mkdirSync(args.scratch, { recursive: true });
+  for (const path of sweepStale(root, args.scratch)) process.stderr.write(`removed stale worktree ${path}\n`);
+  process.once('SIGINT', onSignal);
+  process.once('SIGTERM', onSignal);
   const endpoints = endpointsFromEnv();
   const up = await telemetryUp(endpoints);
   const totals = (sessionId) => sessionTotals(sessionId, endpoints);
   const rows = [];
   for (const task of tasks) {
     process.stderr.write(`running ${task.id} (${task.agent})\n`);
-    rows.push(await runTask(task, { root, config, scratch: args.scratch, epoch, up, totals }));
+    rows.push(await runTask(task, { root, config, scratch: args.scratch, epoch, up, totals, timeoutMin: args.timeoutMin }));
   }
   const file = writeResults(join(root, evals.results), today(new Date()), rows);
   process.stdout.write(`${renderRows(rows).join('\n')}\n\nresults: ${file}\n`);
