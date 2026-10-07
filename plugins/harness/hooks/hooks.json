@@ -12,6 +12,18 @@
         ],
         "matcher": "Bash"
       }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/prettier.sh\"",
+            "timeout": 60
+          }
+        ],
+        "matcher": "Edit|Write"
+      }
     ]
   }
 }
