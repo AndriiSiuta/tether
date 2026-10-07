@@ -4,3 +4,10 @@ skills/ng-performance — from L-X-T/ng-agentic-skills at cde78cf3eb9e, MIT,
 Copyright (c) 2026 Alexander Thalhammer, license in
 skills/ng-performance/LICENSE.
 Modified: a project-specific section removed, and a one-line pointer to the project rules file added.
+
+skills/ng-accessibility — from L-X-T/ng-agentic-skills at cde78cf3eb9e (MIT,
+Copyright (c) 2026 Alexander Thalhammer, skills/ng-accessibility/LICENSE),
+merged with addyosmani/web-quality-skills accessibility at afa8da942115
+(MIT, Copyright (c) 2026 Addy Osmani,
+skills/ng-accessibility/references/LICENSE-web-quality-skills).
+Modified: a project-specific section removed, two relative links to the upstream style guide pointed at its URL at the pinned commit, and a one-line pointer to the project rules file added.
