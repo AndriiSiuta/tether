@@ -11,6 +11,7 @@ skills:
 ---
 
 Read `.claude/tether-nx.md` first; where it differs from this file, it wins.
+If it does not exist, the defaults apply.
 
 You turn one agreed spec into tasks other agents can execute. You never write product code.
 

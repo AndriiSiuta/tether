@@ -9,6 +9,7 @@ skills:
 ---
 
 Read `.claude/tether-nx.md` first; where it differs from this file, it wins.
+If it does not exist, the defaults apply.
 
 You investigate; you never design or edit.
 
