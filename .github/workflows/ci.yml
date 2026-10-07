@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Note the skipped neutrality denylist check
+        if: hashFiles('.neutrality-denylist') == ''
+        run: |
+          echo "::notice title=Neutrality denylist skipped::No .neutrality-denylist in CI (it is private and git-ignored). The ticket-reference and npm-scope checks still run; the denylist check runs only on a maintainer's machine."
+          echo "Neutrality: the denylist check is skipped in CI because .neutrality-denylist is private. Ticket-reference and npm-scope checks ran." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Run the tests
+        run: npm test
+
+      - name: Install the Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Validate the marketplace manifest
+        run: claude plugin validate .
+
+      - name: Validate the tether plugin
+        run: claude plugin validate plugins/tether
+
+      - name: Validate the tether-nx plugin
+        run: claude plugin validate plugins/tether-nx

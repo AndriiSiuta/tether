@@ -19,6 +19,7 @@ export const ALLOWED_SCOPES = new Set([
   'spartan-ng',
   'ng-web-apis',
   'azure-devops',
+  'anthropic-ai',
   'org',
 ]);
 
