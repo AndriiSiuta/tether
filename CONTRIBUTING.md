@@ -22,7 +22,7 @@ claude plugin validate plugins/tether-nx
 Two rules hold for every hook in `plugins/tether/hooks/hooks.json`:
 
 1. **Inert by default.** A hook reads its project values from `.claude/harness.json` and does nothing without that file, or without the key it needs. A new hook gets a new key, documented in the `tether` README, and no behaviour until a project sets it.
-2. **Fail open.** On malformed stdin, a missing field, a malformed config or an unexpected error, a hook exits 0 with no output. Only a deliberate decision (a protected-branch commit, a denied MCP tool, a missing report field) exits 2 or denies. A hook that blocks work because it crashed is a bug; see the [threat model](docs/threat-model.md) for why that trade-off is accepted.
+2. **Fail open.** On malformed stdin, a missing payload field, a malformed config or an unexpected error, a hook exits 0 with no output. Only a deliberate decision (a protected-branch commit, a denied MCP tool, an implementer report without its required lines) exits 2 or denies. A hook that blocks work because it crashed is a bug; see the [threat model](docs/threat-model.md) for why that trade-off is accepted.
 
 Every hook change comes with a spec under `plugins/tether/test/` that covers the inert case and the malformed-input case as well as the behaviour.
 
