@@ -1,6 +1,6 @@
 {
   "name": "tether",
-  "description": "Claude Code plugins for a guarded agent workflow, configured per project.",
+  "description": "Claude Code plugins: tether, project-neutral guards, telemetry and evals configured per project; and tether-nx, agents and skills for Angular and Nx workspaces.",
   "owner": {
     "name": "Andrii Siuta"
   },
@@ -9,6 +9,11 @@
       "name": "tether",
       "source": "./plugins/tether",
       "description": "Project-neutral hooks and tools that read every project value from the project's .claude/harness.json; a project without that file gets no behaviour."
+    },
+    {
+      "name": "tether-nx",
+      "source": "./plugins/tether-nx",
+      "description": "Opinionated agents and skills for Angular and Nx workspaces: library layers, route-scoped providers, signals over RxJS, and a planner, implementer and reviewer that follow them. A project overrides any rule in .claude/tether-nx.md."
     }
   ],
   "renames": {
