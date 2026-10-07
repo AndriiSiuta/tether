@@ -47,6 +47,7 @@ const SOURCES = [
   ['mcp__atlassian__getJiraIssue', 'mcp__atlassian__'],
   ['mcp__sonarqube__show_rule', 'mcp__sonarqube__'],
   ['WebFetch', 'WebFetch'],
+  ['mcp__plugin_figma_figma__get_metadata', 'mcp__figma__'],
 ];
 
 for (const [toolName, source] of SOURCES) {
@@ -61,7 +62,7 @@ for (const [toolName, source] of SOURCES) {
   });
 }
 
-for (const toolName of ['Bash', 'mcp__angular-cli__search_documentation']) {
+for (const toolName of ['Bash', 'mcp__angular-cli__search_documentation', 'mcp__notfigma__x']) {
   test(`${toolName} gets no output`, () => {
     const project = makeProject(`quiet-${toolName.replace(/\W/g, '')}`);
     const run = runCli(JSON.stringify(result(toolName, project)));

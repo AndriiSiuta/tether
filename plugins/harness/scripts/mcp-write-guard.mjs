@@ -14,7 +14,7 @@ export function splitToolName(toolName) {
   return match === null ? null : { server: match[1], tool: match[2] };
 }
 
-function serverMatches(server, ruleServer) {
+export function serverMatches(server, ruleServer) {
   return server === ruleServer || server.endsWith(`_${ruleServer}`);
 }
 

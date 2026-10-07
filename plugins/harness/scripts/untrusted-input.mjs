@@ -1,15 +1,21 @@
 // PostToolUse, matcher mcp__.*|WebFetch: a tool whose name starts with a harness.json untrustedSources entry gets a reminder.
-// WebFetch matches exactly; every other entry is a tool-name prefix.
+// WebFetch matches exactly; an mcp__<s>__ entry matches the server as the write guard does; any other entry is a prefix.
 // Prints a PostToolUse additionalContext and exits 0; exits 0 silently otherwise, and on malformed stdin or no harness.json.
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { loadHookContext, readStdinJson } from './lib/config.mjs';
+import { serverMatches, splitToolName } from './mcp-write-guard.mjs';
+
+function sourceMatches(toolName, source) {
+  if (source === 'WebFetch') return toolName === source;
+  const server = /^mcp__(.+)__$/.exec(source)?.[1];
+  if (server === undefined) return toolName.startsWith(source);
+  const parts = splitToolName(toolName);
+  return parts !== null && serverMatches(parts.server, server);
+}
 
 export function matchSource(toolName, sources) {
-  return (
-    sources.find((source) => typeof source === 'string' && source !== '' && (source === 'WebFetch' ? toolName === source : toolName.startsWith(source))) ??
-    null
-  );
+  return sources.find((source) => typeof source === 'string' && source !== '' && sourceMatches(toolName, source)) ?? null;
 }
 
 export function note(source) {
