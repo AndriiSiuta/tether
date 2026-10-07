@@ -7,7 +7,7 @@
     "node": ">=24"
   },
   "scripts": {
-    "test": "node --test 'plugins/harness/test/**/*.test.mjs'"
+    "test": "node --test 'plugins/*/test/**/*.test.mjs' 'test/**/*.test.mjs'"
   },
   "license": "MIT"
 }

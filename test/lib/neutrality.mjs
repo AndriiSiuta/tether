@@ -1,0 +1,86 @@
+// Scans the files a public repo would publish for private terms, ticket references and unknown npm scopes.
+import { execFileSync } from 'node:child_process';
+import { existsSync, readFileSync, statSync } from 'node:fs';
+import { basename, join } from 'node:path';
+
+export const TICKET = /(?<![&\w])#\d{5}(?!\d)/g;
+export const SCOPE = /(?<![\w.@/])@([a-z0-9][a-z0-9._-]*)\//g;
+export const ALLOWED_SCOPES = new Set([
+  'angular',
+  'angular-eslint',
+  'angular-devkit',
+  'nx',
+  'ngrx',
+  'ngxs',
+  'ngx-translate',
+  'typescript-eslint',
+  'types',
+  'testing-library',
+  'axe-core',
+  'spartan-ng',
+  'ng-web-apis',
+  'azure-devops',
+  'org',
+]);
+
+const MANIFEST_FIELDS = new Map([['.claude-plugin/marketplace.json', 'owner']]);
+const PLUGIN_MANIFEST = /^plugins\/[^/]+\/\.claude-plugin\/plugin\.json$/;
+
+export function isBinary(buffer) {
+  return buffer.subarray(0, 8192).includes(0);
+}
+
+export function listFiles(root) {
+  const out = execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard', '-z'], { cwd: root });
+  return [...new Set(out.toString('utf8').split('\0').filter(Boolean))].filter((path) => {
+    const full = join(root, path);
+    if (!existsSync(full) || !statSync(full).isFile()) return false;
+    return !isBinary(readFileSync(full));
+  });
+}
+
+export function loadDenylist(path) {
+  if (!existsSync(path)) return null;
+  return readFileSync(path, 'utf8')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line && !line.startsWith('#'))
+    .map((line) => new RegExp(line, 'iu'));
+}
+
+function manifestText(path, text) {
+  const key = MANIFEST_FIELDS.get(path) ?? (PLUGIN_MANIFEST.test(path) ? 'author' : undefined);
+  if (key === undefined) return text;
+  const json = JSON.parse(text);
+  if (json[key] && typeof json[key] === 'object') delete json[key].name;
+  return JSON.stringify(json, null, 2);
+}
+
+function exemptLine(path, line) {
+  return basename(path).startsWith('LICENSE') && line.startsWith('Copyright (c)');
+}
+
+export function scanText(text, path, patterns) {
+  const findings = [];
+  text.split('\n').forEach((line, index) => {
+    if (exemptLine(path, line)) return;
+    const at = { path, line: index + 1 };
+    for (const pattern of patterns ?? []) {
+      const match = line.match(pattern);
+      if (match) findings.push({ ...at, check: 'denylist', match: match[0] });
+    }
+    for (const match of line.matchAll(TICKET)) findings.push({ ...at, check: 'ticket', match: match[0] });
+    for (const match of line.matchAll(SCOPE)) {
+      if (!ALLOWED_SCOPES.has(match[1])) findings.push({ ...at, check: 'scope', match: match[0] });
+    }
+  });
+  return findings;
+}
+
+export function scan({ root, files, patterns }) {
+  return files.flatMap((path) => scanText(manifestText(path, readFileSync(join(root, path), 'utf8')), path, patterns));
+}
+
+export function formatFindings(findings) {
+  return findings.map(({ path, line, check, match }) => `${path}:${line} ${check} ${match}`).join('\n');
+}
