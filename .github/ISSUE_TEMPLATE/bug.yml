@@ -1,0 +1,57 @@
+name: Bug
+description: A hook, command, agent or skill does something it should not, or fails to do what its README says.
+labels: [bug]
+body:
+  - type: dropdown
+    id: plugin
+    attributes:
+      label: Plugin
+      options:
+        - tether
+        - tether-nx
+        - the marketplace or the repository
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: The plugin version, the output of `claude --version`, and `node --version`.
+      placeholder: tether 0.2.0, Claude Code 2.x, Node 24.x
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: OS
+      placeholder: Ubuntu 24.04
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: The hook, command, agent or skill, what you did, and what you saw. Paste the stderr line or the agent's reply.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: Config
+      description: The relevant part of `.claude/harness.json` or `.claude/tether-nx.md`, with project names, paths and hosts replaced.
+      render: json
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: This is not exploitable. Anything that is goes through SECURITY.md, not an issue.
+          required: true
+        - label: I removed project names, paths, tokens and environment values from everything above.
+          required: true

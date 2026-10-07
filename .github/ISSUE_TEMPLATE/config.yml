@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a vulnerability privately
+    url: https://github.com/AndriiSiuta/tether/security/advisories/new
+    about: Anything exploitable, such as a guard bypass or a secret in output. See SECURITY.md.

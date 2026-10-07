@@ -1,0 +1,50 @@
+name: Guard gap (not exploitable)
+description: A guard misses a case it should cover, where the miss cannot be used to cause harm, such as a false negative found in your own tests.
+labels: [guard]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Stop if this can be exploited.** A way to commit to a protected branch, commit a local-only path, call a denied MCP write tool, leak a secret or expose telemetry is a vulnerability: report it privately as [SECURITY.md](https://github.com/AndriiSiuta/tether/blob/main/SECURITY.md) describes, not here. Known by-design limits are listed in [docs/threat-model.md](https://github.com/AndriiSiuta/tether/blob/main/docs/threat-model.md).
+  - type: dropdown
+    id: guard
+    attributes:
+      label: Guard
+      options:
+        - git-guard
+        - mcp-write-guard
+        - untrusted-input
+        - implementer-report
+        - spec-cap
+        - fix-round-cap
+        - another hook or command
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      placeholder: tether 0.2.0, Claude Code 2.x, Node 24.x, OS
+    validations:
+      required: true
+  - type: textarea
+    id: input
+    attributes:
+      label: The tool call or command the guard let through
+      description: The smallest input that shows the gap, with project values replaced.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What the guard should have done
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: This gap cannot be used to cause harm; anything exploitable goes through SECURITY.md.
+          required: true

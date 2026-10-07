@@ -1,0 +1,38 @@
+name: Rule doesn't fit
+description: A tether-nx rule, agent or skill does not fit your Angular or Nx workspace.
+labels: [tether-nx, rule]
+body:
+  - type: input
+    id: rule
+    attributes:
+      label: Rule id
+      description: The id from angular-nx-conventions, such as FEAT-3 or DI-2, or the agent or skill name if no rule covers it.
+      placeholder: DI-2
+    validations:
+      required: true
+  - type: textarea
+    id: shape
+    attributes:
+      label: Workspace shape
+      description: Apps and libraries (`nx show projects` is enough, names replaced), library types and tags, the UI and state libraries, and the Angular and Nx versions.
+      placeholder: |
+        one app, libs/<scope>/{feature,data-access,ui,util}
+        tags scope:* and type:*
+        Angular 21, Nx 22, Angular Material, signal services
+    validations:
+      required: true
+  - type: textarea
+    id: misfit
+    attributes:
+      label: What goes wrong
+      description: What the agent or reviewer did because of the rule, and why it is wrong for this workspace.
+    validations:
+      required: true
+  - type: textarea
+    id: override
+    attributes:
+      label: The override you would want
+      description: The line you would write under `overrides:` in `.claude/tether-nx.md`, or why an override is not enough and the default should change.
+      placeholder: "- DI-2: Services in libs/<scope>/data-access may use providedIn: 'root'."
+    validations:
+      required: true
