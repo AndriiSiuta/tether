@@ -2,6 +2,8 @@
 
 A Claude Code plugin of agents and skills for Angular and Nx workspaces: one app, per-domain libraries under `libs/<scope>/<name>`, route-scoped providers, and signals over RxJS. The plugin ships Markdown only, with no hooks and no scripts.
 
+> **Status: 0.1.0, early.** The rules and agents are extracted from a production Angular/Nx workspace, but the plugin agents have not yet been verified on other repositories. Rule ids are stable; wording may change. Please open an issue when an agent or rule does not fit your workspace.
+
 ## What it is
 
 Opinionated defaults the user can override. Every rule has a stable id (`NX-1`, `SIG-2` and so on), and the agents plan, implement and review against those ids. A project that works differently says so in its own `.claude/tether-nx.md`, and every agent and skill reads that file first:
@@ -24,7 +26,7 @@ claude plugin install tether-nx@tether --scope local
 From GitHub, pinned to a tag:
 
 ```
-claude plugin marketplace add <owner>/tether#v0.2.0
+claude plugin marketplace add AndriiSiuta/tether#v0.2.0
 claude plugin install tether-nx@tether --scope local
 ```
 

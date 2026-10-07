@@ -11,12 +11,21 @@ A Claude Code plugin marketplace with two plugins.
 From the project directory:
 
 ```
-claude plugin marketplace add <owner>/tether
+claude plugin marketplace add AndriiSiuta/tether#v0.2.0
 claude plugin install tether@tether --scope local
 claude plugin install tether-nx@tether --scope local
 ```
 
-Install either plugin alone if you need only one. Each plugin's README covers its configuration.
+Install either plugin alone if you need only one. Each plugin's README covers its configuration. Requirements: Claude Code with plugin support, Node 24 and git; the optional parts (telemetry, metrics, backup) list their own tools in the tether README.
+
+## Status
+
+| Plugin | Version | Maturity |
+|---|---|---|
+| `tether` | 0.2.0 | Used daily on a production Angular/Nx monorepo; 200+ tests. |
+| `tether-nx` | 0.1.0 | Early. The rules and agents come from that same workspace, but the plugin agents have not yet been verified on other repositories. Expect wording changes; rule ids are stable. |
+
+Issues and pull requests are welcome. Changes are listed in [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 
