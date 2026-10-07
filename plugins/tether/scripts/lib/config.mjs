@@ -26,7 +26,7 @@ function readConfig(root) {
     if (config === null || typeof config !== 'object' || Array.isArray(config)) throw new Error('not an object');
     return { root, config };
   } catch (error) {
-    process.stderr.write(`harness: ignoring malformed ${join(root, CONFIG_FILE)}: ${error.message}\n`);
+    process.stderr.write(`tether: ignoring malformed ${join(root, CONFIG_FILE)}: ${error.message}\n`);
     return null;
   }
 }

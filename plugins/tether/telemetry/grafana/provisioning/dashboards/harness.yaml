@@ -1,7 +1,7 @@
 apiVersion: 1
 
 providers:
-  - name: "Harness"
+  - name: "Tether"
     type: file
     disableDeletion: true
     allowUiUpdates: false

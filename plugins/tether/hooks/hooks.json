@@ -1,5 +1,5 @@
 {
-  "description": "Harness hooks — each reads the project's .claude/harness.json and does nothing without it",
+  "description": "Tether hooks — each reads the project's .claude/harness.json and does nothing without it",
   "hooks": {
     "PreToolUse": [
       {

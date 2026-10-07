@@ -13,7 +13,7 @@ const CONFIG = {
   sandboxDomains: ['registry.npmjs.org', 'localhost'],
 };
 const NOW = new Date(2026, 9, 7, 9, 5);
-const KEPT = { model: 'opus', effortLevel: 'high', enabledPlugins: { 'harness@claude-harness': true } };
+const KEPT = { model: 'opus', effortLevel: 'high', enabledPlugins: { 'tether@tether': true } };
 const SECRET = 'do-not-print-this-value';
 
 let sandbox;

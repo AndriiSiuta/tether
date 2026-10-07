@@ -278,7 +278,7 @@ test('a run sweeps stale eval worktrees under the scratch dir and leaves others'
   }
 });
 
-test('/harness:eval pre-approves the dry run only', () => {
+test('/tether:eval pre-approves the dry run only', () => {
   const text = readFileSync(join(PLUGIN, 'commands', 'eval.md'), 'utf8');
   const line = text.split('\n').find((l) => l.startsWith('allowed-tools:'));
   assert.deepEqual(JSON.parse(line.slice('allowed-tools:'.length).trim()), ['Bash(node ${CLAUDE_PLUGIN_ROOT}/scripts/eval-run.mjs --dry-run:*)']);

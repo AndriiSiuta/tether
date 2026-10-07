@@ -69,7 +69,7 @@ test('the CLI prints a PreToolUse deny and exits 0', () => {
       hookEventName: 'PreToolUse',
       permissionDecision: 'deny',
       permissionDecisionReason:
-        'harness: mcp__sonarqube__change_sonar_issue_status is an MCP write (server sonarqube, matched change_sonar_issue_status); the deny list is in .claude/harness.json.',
+        'tether: mcp__sonarqube__change_sonar_issue_status is an MCP write (server sonarqube, matched change_sonar_issue_status); the deny list is in .claude/harness.json.',
     },
   });
 });
@@ -91,7 +91,7 @@ for (const [toolName, server, matched] of DENIED) {
     assert.equal(output.hookSpecificOutput.permissionDecision, 'deny');
     assert.equal(
       output.hookSpecificOutput.permissionDecisionReason,
-      `harness: ${toolName} is an MCP write (server ${server}, matched ${matched}); the deny list is in .claude/harness.json.`,
+      `tether: ${toolName} is an MCP write (server ${server}, matched ${matched}); the deny list is in .claude/harness.json.`,
     );
   });
 }

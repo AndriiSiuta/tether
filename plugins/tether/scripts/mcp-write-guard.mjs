@@ -53,7 +53,7 @@ export function evaluate(input, config) {
     hookSpecificOutput: {
       hookEventName: 'PreToolUse',
       permissionDecision: 'deny',
-      permissionDecisionReason: `harness: ${toolName} is an MCP write (server ${match.server}, matched ${match.matched}); the deny list is in .claude/harness.json.`,
+      permissionDecisionReason: `tether: ${toolName} is an MCP write (server ${match.server}, matched ${match.matched}); the deny list is in .claude/harness.json.`,
     },
   };
 }

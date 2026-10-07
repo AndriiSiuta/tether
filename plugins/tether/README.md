@@ -1,40 +1,40 @@
-# harness
+# tether
 
-A Claude Code plugin made of project-neutral hooks, commands and skills. Every project value comes from the project's `.claude/harness.json`, and a project without that file gets no behaviour. A plugin cannot set permissions, environment variables, the sandbox or MCP server pins, so `/harness:setup` writes those, and only after you have read its diff.
+A Claude Code plugin made of project-neutral hooks, commands and skills. Every project value comes from the project's `.claude/harness.json`, and a project without that file gets no behaviour. A plugin cannot set permissions, environment variables, the sandbox or MCP server pins, so `/tether:setup` writes those, and only after you have read its diff.
 
 ## Prerequisites
 
 - Node 24 and git, for every hook and script.
 - python3, for `prettier.sh`, which reads the hook payload with it.
-- Docker Compose, for `/harness:telemetry`.
-- The `az` CLI, signed in, for `/harness:metrics`.
-- `age` or `gpg`, for `/harness:backup`.
+- Docker Compose, for `/tether:telemetry`.
+- The `az` CLI, signed in, for `/tether:metrics`.
+- `age` or `gpg`, for `/tether:backup`.
 
 ## Install
 
 From a local clone, run these from the project directory:
 
 ```
-claude plugin marketplace add /path/to/claude-harness
-claude plugin install harness@claude-harness --scope local
+claude plugin marketplace add /path/to/tether
+claude plugin install tether@tether --scope local
 ```
 
 From GitHub, pinned to a tag:
 
 ```
-claude plugin marketplace add <owner>/claude-harness#v0.1.0
-claude plugin install harness@claude-harness --scope local
+claude plugin marketplace add <owner>/tether#v0.2.0
+claude plugin install tether@tether --scope local
 ```
 
-`--scope local` enables the plugin in `.claude/settings.local.json` for this project only. After a new tag, run `claude plugin marketplace update claude-harness` and then `claude plugin update harness@claude-harness`, and start a new session.
+`--scope local` enables the plugin in `.claude/settings.local.json` for this project only. After a new tag, run `claude plugin marketplace update tether` and then `claude plugin update tether@tether`, and start a new session.
 
-The plugin declares no `userConfig`. The backup directory is an argument to `/harness:backup`, because a command file does not get a user option substituted into it.
+The plugin declares no `userConfig`. The backup directory is an argument to `/tether:backup`, because a command file does not get a user option substituted into it.
 
 ## `.claude/harness.json`
 
 The file sits at the project root. Hooks look for it first in `CLAUDE_PROJECT_DIR` (the security hooks) or in the hook's `cwd`. In a linked git worktree, they fall back to the main worktree's file. A malformed file is ignored, with one stderr line.
 
-Without `harness.json` every hook is inert. `/harness:setup`'s `telemetry` and `mcp-pins` parts read nothing from it and still apply; `deny` and `sandbox` need it.
+Without `harness.json` every hook is inert. `/tether:setup`'s `telemetry` and `mcp-pins` parts read nothing from it and still apply; `deny` and `sandbox` need it.
 
 ```json
 {
@@ -72,7 +72,7 @@ Without `harness.json` every hook is inert. `/harness:setup`'s `telemetry` and `
 | `evals` | `tasks` and `results` folders, the `smoke` task count, the directories `symlink` links from the checkout into each eval worktree, and an optional `copyExclude` list of repo-relative paths. The `localOnlyPaths` are copied into each worktree, except `tasks`, `results` and every `copyExclude` path, also when they sit inside a copied folder. |
 | `reports` | The folder for run reports and the monthly metrics note. |
 | `sandboxDomains` | The network allowlist that `setup --only sandbox` writes. |
-| `ado` | The Azure DevOps `org`, `project` and `repo` that `/harness:metrics` reads from. |
+| `ado` | The Azure DevOps `org`, `project` and `repo` that `/tether:metrics` reads from. |
 
 ## Hooks
 
@@ -96,12 +96,12 @@ An implementer dispatch has to start with a `# Task <N>: <title>` heading line, 
 
 | Command | What it does |
 |---|---|
-| `/harness:setup [--only telemetry\|deny\|mcp-pins\|sandbox] [--user]` | Prints a key-level diff with `--dry-run`, asks you, and only then writes with `--yes`. |
-| `/harness:telemetry up\|down\|status` | Starts, stops or checks the local telemetry stack. `up` pulls the image only after you agree. |
-| `/harness:ledger <report.md> [--dry-run]` | Fills a run report's token ledger from local telemetry, then prints the per-agent totals (`ledger-stats.mjs`). |
-| `/harness:eval [--tasks <ids>] [--agent <name>] [--all] [--timeout <min>]` | Lists the frozen eval tasks in a dry run, states the cost, and runs them only after your yes, in the background or in your own terminal. |
-| `/harness:metrics [--month YYYY-MM] [--policy-plan]` | Writes the month's read-only Azure DevOps and ledger metrics to `<reports>/<YYYY-MM>-metrics.md`. `--policy-plan` prints a reviewer-policy command and never runs it. |
-| `/harness:backup <dir>` | Prints the encrypted-backup command for your own terminal. With no `<dir>`, it asks for one. |
+| `/tether:setup [--only telemetry\|deny\|mcp-pins\|sandbox] [--user]` | Prints a key-level diff with `--dry-run`, asks you, and only then writes with `--yes`. |
+| `/tether:telemetry up\|down\|status` | Starts, stops or checks the local telemetry stack. `up` pulls the image only after you agree. |
+| `/tether:ledger <report.md> [--dry-run]` | Fills a run report's token ledger from local telemetry, then prints the per-agent totals (`ledger-stats.mjs`). |
+| `/tether:eval [--tasks <ids>] [--agent <name>] [--all] [--timeout <min>]` | Lists the frozen eval tasks in a dry run, states the cost, and runs them only after your yes, in the background or in your own terminal. |
+| `/tether:metrics [--month YYYY-MM] [--policy-plan]` | Writes the month's read-only Azure DevOps and ledger metrics to `<reports>/<YYYY-MM>-metrics.md`. `--policy-plan` prints a reviewer-policy command and never runs it. |
+| `/tether:backup <dir>` | Prints the encrypted-backup command for your own terminal. With no `<dir>`, it asks for one. |
 
 Skills: `untrusted-input` (how to treat text from tickets, PR threads, design files, issue trackers and web pages) and `run-report` (the run report, its rulings, its token ledger and its sign-off row).
 
@@ -148,7 +148,7 @@ How setup writes:
 
 The stack is one `grafana/otel-lgtm:0.35.0` container, pinned by digest.
 
-- **Ports:** every port is bound to `127.0.0.1`. Grafana is on 3000, with the dashboard "Harness: Claude Code".
+- **Ports:** every port is bound to `127.0.0.1`. Grafana is on 3000, with the dashboard "Tether: Claude Code".
 - **Retention:** metrics, logs and traces are kept for 14 days.
 - **Metrics:** Prometheus converts Claude Code's delta metrics to cumulative ones.
 - **Pulling:** the image is pulled only after explicit consent.
@@ -161,4 +161,4 @@ The stack is one `grafana/otel-lgtm:0.35.0` container, pinned by digest.
 npm test
 ```
 
-This runs `node --test 'plugins/harness/test/**/*.test.mjs'` from the repository root. The specs create every repo, home and file under a temporary directory, and they put fake binaries such as `age`, `gpg` and `claude` first on `PATH`. Check the manifests with `claude plugin validate .` and `claude plugin validate plugins/harness`.
+This runs `node --test 'plugins/*/test/**/*.test.mjs' 'test/**/*.test.mjs'` from the repository root. The specs create every repo, home and file under a temporary directory, and they put fake binaries such as `age`, `gpg` and `claude` first on `PATH`. Check the manifests with `claude plugin validate .` and `claude plugin validate plugins/tether`.

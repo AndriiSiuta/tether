@@ -186,7 +186,7 @@ const percent = (r) => (r === undefined ? 'n/a' : `${(r * 100).toFixed(1)} %`);
 
 export function renderMetrics({ month, target, prs, builds, escapes, ledger }) {
   const lines = [
-    `# Harness metrics ${month}`,
+    `# Tether metrics ${month}`,
     '',
     `Source: ${target.org} / ${target.project} / ${target.repo}, \`refs/heads/main\`; ${ledger.reportCount} run report(s).`,
     '',
@@ -202,7 +202,7 @@ export function renderMetrics({ month, target, prs, builds, escapes, ledger }) {
     `| Build fail rate | ${percent(builds.failRate)} |`,
     `| \`ai-escape\` bugs created | ${escapes} |`,
     '',
-    '## Harness',
+    '## Tether',
     '',
     `Fix rounds: ${ledger.fixRounds}`,
     '',

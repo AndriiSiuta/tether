@@ -5,7 +5,7 @@ argument-hint: "[--only telemetry|deny|mcp-pins|sandbox] [--user]"
 arguments: options
 ---
 
-Write the harness settings for this project in two passes. Never pass `--yes` on the first pass.
+Write the tether settings for this project in two passes. Never pass `--yes` on the first pass.
 
 1. Run `node "${CLAUDE_PLUGIN_ROOT}/scripts/setup.mjs" --dry-run $ARGUMENTS` from the project directory.
 2. Show the user its output exactly as printed: one block per part, the target file, and the key-level diff. The diff names keys only; the two MCP pins also show their old and new argument strings. Never print a value from a settings file, an MCP entry's `env`, or a token.
