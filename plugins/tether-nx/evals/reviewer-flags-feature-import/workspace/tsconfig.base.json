@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "paths": {
+      "@org/invoices/feature": ["./libs/invoices/feature/src/index.ts"],
+      "@org/orders/feature": ["./libs/orders/feature/src/index.ts"]
+    }
+  }
+}

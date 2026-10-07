@@ -1,0 +1,6 @@
+{
+  "name": "invoices-feature",
+  "projectType": "library",
+  "sourceRoot": "libs/invoices/feature/src",
+  "tags": ["scope:invoices", "type:feature"]
+}

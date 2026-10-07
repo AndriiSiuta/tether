@@ -124,6 +124,26 @@ The rule ids (`NX-*`, `FEAT-*`, `DI-*`, `SIG-*`, `CMP-*`, `COPY-1`, `TEST-1`, `T
 
 The Angular team's `angular-developer` skill, from [github.com/angular/skills](https://github.com/angular/skills), listed on [angular.dev/ai/agent-skills](https://angular.dev/ai/agent-skills). It covers the per-file Angular APIs (signals, `resource`, forms, routing, DI, testing) that this plugin's rules sit on top of. It is linked here, not copied.
 
+## Evals
+
+Five cases under [`evals/`](evals/), in Claude Code's `claude plugin eval` format (a `prompt.md`, an optional `case.yaml` and `graders/*.md` per case). Each case dispatches one agent against a small read-only fixture workspace in the case's `workspace/` folder, over a neutral orders and invoices domain, and grades the result mostly with free regex and tool checks:
+
+| Case | Checks |
+|---|---|
+| `reviewer-flags-root-domain-service` | `Mode: conventions` marks `DI-2` fail for a data-access service with `providedIn: 'root'`. |
+| `reviewer-flags-feature-import` | `Mode: conventions` marks `FEAT-3` fail for a feature library that imports another feature library. |
+| `reviewer-without-mode-is-blocked` | A dispatch with no mode line gets `Blocked: name the mode` and no table. |
+| `planner-task-headings` | The plan's tasks are headed `### Task <N>: [tag] <title>`, one tag each, at most 12. Needs `--allow-tools Write`. |
+| `implementer-blocks-on-open-placement` | A brief that leaves placement open gets a `Blocked:` report and no written file. One `llm` grader. |
+
+Every run is a real model call on your account. From the repository root, a cheap single pass with no baseline arm:
+
+```
+claude plugin eval plugins/tether-nx --ablation none --runs 1 --no-publish
+```
+
+Add `--tag smoke` for the four read-only cases, `--case <name>` for one case, and `--allow-tools Write` for the planner case. Drop `--ablation none --runs 1` for the default three runs with and without the plugin, which reports what the plugin adds. Results go to `evals/results/`, which is git-ignored. The first run asks you to trust the directory.
+
 ## Tests
 
 From the repository root:

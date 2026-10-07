@@ -1,0 +1,6 @@
+{
+  "name": "orders-data-access",
+  "projectType": "library",
+  "sourceRoot": "libs/orders/data-access/src",
+  "tags": ["scope:orders", "type:data-access"]
+}
