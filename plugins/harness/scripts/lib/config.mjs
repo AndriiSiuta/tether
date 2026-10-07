@@ -69,6 +69,10 @@ export async function readStdinJson() {
   }
 }
 
+export function escapeRegExp(text) {
+  return text.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&');
+}
+
 export function getConfigValue(config, key) {
   return key.split('.').reduce((value, part) => (value !== null && typeof value === 'object' ? value[part] : undefined), config);
 }

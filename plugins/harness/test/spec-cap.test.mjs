@@ -5,11 +5,11 @@ import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { evaluate, specPaths } from '../scripts/spec-cap.mjs';
+import { evaluate, localDate, specPaths } from '../scripts/spec-cap.mjs';
 
 const CLI = join(dirname(fileURLToPath(import.meta.url)), '..', 'scripts', 'spec-cap.mjs');
 const CONFIG = { spec: { dir: 'notes/specs', maxWords: 10, agent: 'spec-writer' } };
-const TODAY = new Date().toISOString().slice(0, 10);
+const TODAY = localDate();
 const OVER = `${'word '.repeat(11)}\n`;
 const UNDER = `${'word '.repeat(10)}\n`;
 
@@ -111,4 +111,17 @@ test('malformed stdin or a missing field exits 0 silently', () => {
     assert.equal(result.status, 0);
     assert.equal(result.stdout + result.stderr, '');
   }
+});
+
+test('a continuation stop (stop_hook_active) is let through even over the cap', () => {
+  const project = makeProject('continued');
+  const path = writeSpec(project, `${TODAY}-loop.md`, OVER);
+  const result = runCli(JSON.stringify({ ...stop(`Wrote ${path}.`, project), stop_hook_active: true }));
+  assert.equal(result.status, 0);
+  assert.equal(result.stderr, '');
+});
+
+test('today is the local calendar date', () => {
+  assert.equal(localDate(new Date(2026, 0, 2, 0, 30)), '2026-01-02');
+  assert.equal(localDate(new Date(2026, 11, 31, 23, 59)), '2026-12-31');
 });

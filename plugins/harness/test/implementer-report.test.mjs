@@ -92,3 +92,10 @@ test('malformed stdin or a missing field exits 0 silently', () => {
     assert.equal(result.stdout + result.stderr, '');
   }
 });
+
+test('a continuation stop (stop_hook_active) is let through even with fields missing', () => {
+  const project = makeProject('continued');
+  const result = runCli(JSON.stringify({ ...stop('Files: a.ts', project), stop_hook_active: true }));
+  assert.equal(result.status, 0);
+  assert.equal(result.stderr, '');
+});

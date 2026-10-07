@@ -56,8 +56,8 @@ export function recordStop(dataDir, key) {
   return count;
 }
 
-export function capMessage(cap, task) {
-  return `${cap} fix rounds used on ${task}; stop and escalate to Andrii with the failing check.`;
+export function capMessage(rounds, cap, task) {
+  return `${rounds} fix rounds used on ${task}, over the cap of ${cap}; stop and escalate to the user with the failing check.`;
 }
 
 export function evaluate(input, config, dataDir) {
@@ -75,7 +75,7 @@ export function evaluate(input, config, dataDir) {
   const task = taskFromTranscript(transcript);
   if (task === null) return null;
   const count = recordStop(dataDir, `${input.session_id}|${task}`);
-  return count - 1 > cap ? capMessage(cap, task) : null;
+  return count - 1 > cap ? capMessage(count - 1, cap, task) : null;
 }
 
 async function main() {

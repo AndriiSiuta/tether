@@ -9,7 +9,7 @@ import { evaluate, roundsFile, taskFromTranscript } from '../scripts/fix-round-c
 
 const CLI = join(dirname(fileURLToPath(import.meta.url)), '..', 'scripts', 'fix-round-cap.mjs');
 const CONFIG = { implementerAgents: ['web-implementer', 'web-implementer-mechanical'], fixRoundCap: 2 };
-const BLOCKED = '2 fix rounds used on Task 3; stop and escalate to Andrii with the failing check.\n';
+const BLOCKED = '3 fix rounds used on Task 3, over the cap of 2; stop and escalate to the user with the failing check.\n';
 
 let sandbox;
 

@@ -4,14 +4,10 @@
 import { execFileSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { loadSecurityContext, readStdinJson } from './lib/config.mjs';
+import { escapeRegExp, loadSecurityContext, readStdinJson } from './lib/config.mjs';
 
 function git(dir, args) {
   return execFileSync('git', args, { cwd: dir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
-}
-
-function escapeRegExp(text) {
-  return text.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&');
 }
 
 export function localOnlyPattern(paths) {

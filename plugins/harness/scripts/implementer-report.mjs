@@ -1,13 +1,9 @@
 // SubagentStop: an agent listed in harness.json implementerAgents must end with every reportFields line, or a Blocked: line.
 // A field's alternatives are separated by `|`; any one of them satisfies the field.
-// Exit 2 with one stderr paragraph sends the agent back; exit 0 otherwise, and on malformed stdin, a missing field or no harness.json.
+// Exit 2 with one stderr paragraph sends the agent back; exit 0 otherwise, on stop_hook_active, malformed stdin, a missing field or no harness.json.
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { loadHookContext, readStdinJson } from './lib/config.mjs';
-
-function escapeRegExp(text) {
-  return text.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&');
-}
+import { escapeRegExp, loadHookContext, readStdinJson } from './lib/config.mjs';
 
 function firstAlternative(field) {
   return field.split('|')[0];
@@ -23,6 +19,7 @@ export function evaluate(input, config) {
   const agents = config.implementerAgents ?? [];
   const fields = config.reportFields ?? [];
   const message = input?.last_assistant_message;
+  if (input?.stop_hook_active === true) return null;
   if (!agents.includes(input?.agent_type) || typeof message !== 'string') return null;
   if (/^\s*Blocked:/m.test(message)) return null;
   const missing = missingFields(message, fields);
