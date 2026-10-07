@@ -16,4 +16,6 @@ pointer to the project rules file added after the first heading; the two
 relative links to the upstream style guide pointed at its URL at the
 pinned commit; Part 3 (WCAG 2.2 additions, audit and triage) and three
 reference links (WCAG quick reference, axe rules, the local references)
-condensed from web-quality-skills.
+condensed from web-quality-skills. From web-quality-skills, the files
+skills/ng-accessibility/references/A11Y-PATTERNS.md and
+skills/ng-accessibility/references/WCAG.md are included.
