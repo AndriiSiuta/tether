@@ -74,7 +74,13 @@ async function main(argv) {
     process.stderr.write('the report needs a `| # | Agent |` table and `Sessions:` and `Agent ids:` lines\n');
     return 2;
   }
-  const endpoints = endpointsFromEnv();
+  let endpoints;
+  try {
+    endpoints = endpointsFromEnv();
+  } catch {
+    process.stderr.write('HARNESS_OTEL_ENDPOINTS is not valid JSON\n');
+    return 1;
+  }
   let filled;
   try {
     if (!(await telemetryUp(endpoints))) throw new Error('down');

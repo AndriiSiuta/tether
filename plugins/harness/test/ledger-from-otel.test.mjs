@@ -197,3 +197,12 @@ test('a report without header lines exits 2', async () => {
   const result = await runCli([file], { HARNESS_OTEL_ENDPOINTS: JSON.stringify(endpoints) });
   assert.equal(result.status, 2);
 });
+
+test('a malformed HARNESS_OTEL_ENDPOINTS exits 1 without echoing its value', async () => {
+  const file = writeReport('bad-env.md');
+  const result = await runCli([file], { HARNESS_OTEL_ENDPOINTS: '{not-json-secret-marker' });
+  assert.equal(result.status, 1);
+  assert.equal(result.stderr, 'HARNESS_OTEL_ENDPOINTS is not valid JSON\n');
+  assert.doesNotMatch(result.stdout + result.stderr, /secret-marker/);
+  assert.equal(readFileSync(file, 'utf8'), REPORT);
+});

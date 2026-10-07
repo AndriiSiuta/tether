@@ -4,7 +4,7 @@
 import { spawn, spawnSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { basename, dirname, join, resolve, sep } from 'node:path';
+import { basename, dirname, join, relative, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { findConfig } from './lib/config.mjs';
 import { sessionTotals, telemetryUp } from './lib/otel.mjs';
@@ -168,12 +168,18 @@ export function onSignal(signal) {
 
 const covers = (entry, path) => path === entry || path.startsWith(`${entry.replace(/\/$/, '')}/`);
 
-export function prepareWorktree(root, worktree, { localOnlyPaths = [], symlink = [] }) {
+export function copyExcludes(evals = {}) {
+  const entries = [evals.tasks, evals.results, ...(isStringArray(evals.copyExclude) ? evals.copyExclude : [])];
+  return entries.filter((entry) => typeof entry === 'string' && entry.trim() !== '').map((entry) => entry.replace(/\/+$/, ''));
+}
+
+export function prepareWorktree(root, worktree, { localOnlyPaths = [], symlink = [], exclude = [] }) {
+  const excluded = (path) => exclude.some((entry) => covers(entry, path));
   for (const entry of localOnlyPaths) {
     const source = join(root, entry);
-    if (!existsSync(source)) continue;
+    if (!existsSync(source) || excluded(entry.replace(/\/+$/, ''))) continue;
     mkdirSync(dirname(join(worktree, entry)), { recursive: true });
-    cpSync(source, join(worktree, entry), { recursive: true });
+    cpSync(source, join(worktree, entry), { recursive: true, filter: (src) => !excluded(relative(root, src).split(sep).join('/')) });
   }
   for (const entry of symlink) {
     const source = join(root, entry);
@@ -239,7 +245,7 @@ export async function runTask(task, { root, config, scratch, epoch, up, totals, 
     git(root, ['worktree', 'add', '--detach', worktree, task.base]);
     created = true;
     Object.assign(active, { worktree, root });
-    prepareWorktree(root, worktree, { localOnlyPaths: config.localOnlyPaths ?? [], symlink: evals.symlink ?? [] });
+    prepareWorktree(root, worktree, { localOnlyPaths: config.localOnlyPaths ?? [], symlink: evals.symlink ?? [], exclude: copyExcludes(evals) });
     const agentRun = await runAsync(claude, ['-p', '--agent', task.agent, '--output-format', 'json', '--permission-mode', 'acceptEdits'], {
       cwd: worktree,
       input: task.brief,
@@ -400,7 +406,13 @@ async function main(argv) {
   for (const path of sweepStale(root, args.scratch)) process.stderr.write(`removed stale worktree ${path}\n`);
   process.once('SIGINT', onSignal);
   process.once('SIGTERM', onSignal);
-  const endpoints = endpointsFromEnv();
+  let endpoints;
+  try {
+    endpoints = endpointsFromEnv();
+  } catch {
+    process.stderr.write('HARNESS_OTEL_ENDPOINTS is not valid JSON\n');
+    return 1;
+  }
   const up = await telemetryUp(endpoints);
   const totals = (sessionId) => sessionTotals(sessionId, endpoints);
   const rows = [];

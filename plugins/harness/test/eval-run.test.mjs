@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { setTimeout as delay } from 'node:timers/promises';
-import { costOf, parseResults, selectTasks, validateTask } from '../scripts/eval-run.mjs';
+import { copyExcludes, costOf, parseResults, prepareWorktree, selectTasks, validateTask } from '../scripts/eval-run.mjs';
 
 const PLUGIN = join(dirname(fileURLToPath(import.meta.url)), '..');
 const CLI = join(PLUGIN, 'scripts', 'eval-run.mjs');
@@ -94,7 +94,7 @@ const fs = require('node:fs');
 const brief = fs.readFileSync(0, 'utf8');
 fs.mkdirSync('src', { recursive: true });
 fs.writeFileSync('src/out.txt', brief);
-fs.appendFileSync(process.env.FAKE_LOG, JSON.stringify({ args: process.argv.slice(2), brief, config: fs.existsSync('.claude/harness.json'), deps: fs.existsSync('deps/lib.js'), projectDir: 'CLAUDE_PROJECT_DIR' in process.env }) + '\\n');
+fs.appendFileSync(process.env.FAKE_LOG, JSON.stringify({ args: process.argv.slice(2), brief, config: fs.existsSync('.claude/harness.json'), tasks: fs.existsSync('private/evals/tasks'), notes: fs.existsSync('private/notes.md'), deps: fs.existsSync('deps/lib.js'), projectDir: 'CLAUDE_PROJECT_DIR' in process.env }) + '\\n');
 setTimeout(() => {
   process.stdout.write(JSON.stringify({ type: 'result', session_id: 's-1', result: 'Found the MISSING KEY in en-GB.', usage: { input_tokens: 1000, output_tokens: 500 }, duration_ms: 2000 }));
   process.exit(Number(process.env.FAKE_CLAUDE_EXIT ?? 0));
@@ -140,6 +140,7 @@ test('costOf falls back to usage and duration when telemetry is down', async () 
 
 test('a run writes the results file and removes its worktree', () => {
   writeTask('01-t1.json', task());
+  writeFileSync(join(repo, 'private', 'notes.md'), 'local\n');
   const result = runCli([]);
   assert.equal(result.status, 0, result.stderr);
   const file = join(repo, RESULTS_DIR, `${today()}.md`);
@@ -152,6 +153,8 @@ test('a run writes the results file and removes its worktree', () => {
   assert.equal(call.brief, 'Write src/out.txt.');
   assert.equal(call.config, true);
   assert.equal(call.deps, true);
+  assert.equal(call.tasks, false);
+  assert.equal(call.notes, true);
   assert.equal(call.projectDir, false);
   assert.deepEqual(readdirSync(scratch), []);
   assert.equal(worktrees(), 1);
@@ -280,4 +283,29 @@ test('/harness:eval pre-approves the dry run only', () => {
   const line = text.split('\n').find((l) => l.startsWith('allowed-tools:'));
   assert.deepEqual(JSON.parse(line.slice('allowed-tools:'.length).trim()), ['Bash(node ${CLAUDE_PLUGIN_ROOT}/scripts/eval-run.mjs --dry-run:*)']);
   assert.match(text, /run_in_background/);
+});
+
+test('copyExcludes holds the tasks and results folders and evals.copyExclude', () => {
+  assert.deepEqual(copyExcludes({ tasks: 'a/tasks/', results: 'a/results', copyExclude: ['a/secret'] }), ['a/tasks', 'a/results', 'a/secret']);
+  assert.deepEqual(copyExcludes({ copyExclude: 'nope' }), []);
+});
+
+test('prepareWorktree leaves the eval tasks, results and copyExclude paths out of a copied local-only folder', () => {
+  const root = join(sandbox, 'copy-root');
+  const worktree = join(sandbox, 'copy-worktree');
+  for (const dir of ['private/evals/tasks', 'private/evals/results', 'private/secret']) mkdirSync(join(root, dir), { recursive: true });
+  writeFileSync(join(root, 'private/evals/tasks/t.json'), '{}');
+  writeFileSync(join(root, 'private/evals/results/r.md'), '');
+  writeFileSync(join(root, 'private/secret/s.txt'), '');
+  writeFileSync(join(root, 'private/notes.md'), '');
+  mkdirSync(join(root, 'top-secret'), { recursive: true });
+  mkdirSync(worktree);
+  prepareWorktree(root, worktree, {
+    localOnlyPaths: ['private', 'top-secret'],
+    exclude: copyExcludes({ tasks: 'private/evals/tasks', results: 'private/evals/results', copyExclude: ['private/secret', 'top-secret'] }),
+  });
+  assert.equal(existsSync(join(worktree, 'private/notes.md')), true);
+  for (const path of ['private/evals/tasks', 'private/evals/results', 'private/secret', 'top-secret']) {
+    assert.equal(existsSync(join(worktree, path)), false, path);
+  }
 });
