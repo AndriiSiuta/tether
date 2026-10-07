@@ -41,7 +41,7 @@ claude plugin install tether-nx@tether --scope local
 }
 ```
 
-The report hook then sends an implementer back when its final message lacks `Files:`, `Checks:`, `Deferred:` and `Plan edits:`, or a `Blocked:` line. The fix-round cap keys its count on the dispatch's first line, so an implementer dispatch starts with `# Task <N>: <title>`. To have tether's spec word cap watch the spec-writer, set `spec.agent` to `tether-nx:spec-writer`. See the `tether` README for the other keys.
+The report hook then sends an implementer back when its final message lacks `Files:`, `Checks:`, `Deferred:` and `Plan edits:`, or a `Blocked:` line. The fix-round cap keys its count on the dispatch's first line, so an implementer dispatch starts with `# Task <N>: <title>`. To have tether's spec word cap watch the spec-writer, set `spec.agent` to `tether-nx:spec-writer` and `spec.dir` to the rules file's `paths.specs` (`docs/specs` by default), so the cap reads the folder the spec-writer writes to. See the `tether` README for the other keys.
 
 ## The rules file
 
@@ -51,9 +51,9 @@ The file is `.claude/tether-nx.md` at the project root. A template:
 # Project rules (tether-nx)
 alias: @org/
 ui: Angular Material
-state: signals (NGXS in libraries that already have a store)
-i18n: ngx-translate; keys in apps/<app>/src/assets/i18n/{en,…}.json
-verify: node tools/verify.mjs --base {base}
+state: NgRx SignalStore in data-access libraries
+i18n: ngx-translate; every key in each file under apps/<app>/src/assets/i18n/
+verify: npm run verify -- --base {base}
 paths: { specs: docs/specs, plans: docs/plans, reports: docs/reports }
 overrides:
   - <rule id>: <the project's rule>

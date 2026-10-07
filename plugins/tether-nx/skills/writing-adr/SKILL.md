@@ -13,7 +13,7 @@ An architecture decision record is the shortest document that lets a future read
 
 ## When to Use
 
-- The choice constrains several features (no tests, no swagger, types-first, cookie auth, one process serves both apps)
+- The choice constrains several features (for example: one state library for the whole app, server-side sessions instead of tokens, generated API clients)
 - A spec choice is being reversed and the old reason should survive
 - A reviewer keeps asking "why don't we just…"
 
@@ -21,7 +21,7 @@ Not for: a single feature's design (spec), a small "fine as is" verdict (follow-
 
 ## The record
 
-Path: `docs/<decisions dir>/NNNN-<slug>.md`, `NNNN` zero-padded and sequential; in this repo `docs/adr/`. One decision per file. Never edit a decision's text after it is accepted; supersede it with a new record and set the old status.
+Path: `docs/<decisions dir>/NNNN-<slug>.md`, `NNNN` zero-padded and sequential; default `docs/adr/`. One decision per file. Never edit a decision's text after it is accepted; supersede it with a new record and set the old status.
 
 ```
 # NNNN: <decision in ≤8 words>

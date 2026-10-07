@@ -1,6 +1,6 @@
 ---
 name: angular-architecture
-description: Use when deciding where an Angular file belongs or whether one part may import another - adding a feature or domain, splitting a screen into components, choosing root vs route-level vs component providers, placing shared kit vs feature UI, deciding which layer fetches data and which owns state, or untangling a cross-feature or circular import. Structural placement and dependency direction for Angular 17+ signal-era apps; for per-file API rules (signal syntax, control flow, OnPush) use angular-best-practices.
+description: Use when deciding where an Angular file belongs or whether one part may import another - adding a feature or domain, splitting a screen into components, choosing root vs route-level vs component providers, placing shared kit vs feature UI, deciding which layer fetches data and which owns state, or untangling a cross-feature or circular import. Structural placement and dependency direction for Angular 17+ signal-era apps; for per-file API rules (signal syntax, control flow, OnPush) use the Angular team's angular-developer skill.
 ---
 
 # Angular Architecture
@@ -9,7 +9,7 @@ Read `.claude/tether-nx.md` first; where it differs from this file, it wins.
 
 ## Overview
 
-This skill answers two questions only: **where does this file go**, and **may this file import that one**. Per-file syntax belongs to `angular-best-practices`; store library idioms belong to `angular-best-practices-signalstore`.
+This skill answers two questions only: **where does this file go**, and **may this file import that one**. Per-file syntax and store idioms belong to the Angular team's `angular-developer` skill (https://github.com/angular/skills).
 
 Two invariants generate every rule below:
 

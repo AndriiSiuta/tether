@@ -2,7 +2,7 @@
 
 Date: YYYY-MM-DD · Status: draft | agreed · Amends: `<paths.specs>/<file>.md` §<n> (or "none")
 
-Cap: 1,500 words in total, tables included. A component wave that does not fit is one spec per batch of at most six components.
+Cap: 1,500 words in total, tables included. A large batch of components is split into several specs.
 
 ## Goal
 

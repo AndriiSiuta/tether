@@ -25,7 +25,7 @@ State is a type, not a sentinel. A piece of code says what it holds: a discrimin
 | Fields and arrays | `readonly` fields; `readonly T[]` for arrays handed around; no `!`; an unavoidable `as` lives inside one typed wrapper function. | Google TS style guide |
 | A union in a `switch` | Exhaustive, with a `never` default; `@typescript-eslint/switch-exhaustiveness-check` is on. | TS handbook exhaustiveness |
 | Parameters | Never reassigned; defaults with `??`. | `no-param-reassign` |
-| A boolean from a service | Named for what it holds; `checkPermission()` returns `true` when restricted, so the field is `isRestricted`, never `canAccess = !checkPermission(...)`. | naming |
+| A boolean from a service | Named for what it holds and read without negation: `isArchived = order.status === 'archived'`, never `notActive = !isActive(order)`. | naming |
 
 ## Before you report a task done
 

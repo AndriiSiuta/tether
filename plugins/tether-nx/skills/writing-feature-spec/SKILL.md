@@ -24,7 +24,7 @@ Not for: exploring options (brainstorming), sequencing work (the plan), recordin
 
 Whether the file is committed is the project's choice, stated in the rules file's `facts:`; without one, leave it uncommitted.
 
-Caps: 1,500 words in total, tables and type blocks included; tether's spec-cap hook enforces it when the project configures it. A component wave is one spec per batch of at most six components, each pointing at its design link and its reference implementation instead of restating them. A refactor, a migration or a component wave uses `references/refactor-spec-template.md` instead of the feature template. Copy strings quoted exactly as they will render.
+Caps: 1,500 words in total, tables and type blocks included; tether's spec-cap hook enforces it when the project configures it. A large batch of components is split into several specs, each component pointing at its design link and its reference implementation instead of restating them. A refactor, a migration or a component wave uses `references/refactor-spec-template.md` instead of the feature template. Copy strings quoted exactly as they will render.
 
 ## Rules
 

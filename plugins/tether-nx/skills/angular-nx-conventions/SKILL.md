@@ -28,7 +28,7 @@ A project describes itself in `.claude/tether-nx.md`. Without the file, the defa
 alias: @org/
 ui: Angular Material
 state: NgRx SignalStore in data-access libraries
-verify: node tools/verify.mjs --base {base}
+verify: npm run verify -- --base {base}
 overrides:
 - CMP-1: The selector prefix is `acme-`.
 - TS-1: `strictNullChecks` is off; write code that would pass it.

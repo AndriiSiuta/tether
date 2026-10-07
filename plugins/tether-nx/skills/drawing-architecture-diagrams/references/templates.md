@@ -8,14 +8,14 @@ Replace names; keep the caps.
 flowchart LR
   browser["Browser<br/>Angular SPA"]
   subgraph server["Single process"]
-    api["Nest API<br/>/api/*"]
+    api["HTTP API<br/>/api/*"]
     static["Static build"]
   end
-  db[("MongoDB")]
-  idp["Google Identity"]
-  browser -->|"HTTPS, httpOnly cookie app_session, X-Client-Date"| api
+  db[("Database")]
+  idp["Identity provider"]
+  browser -->|"HTTPS, httpOnly cookie session, X-Request-Id"| api
   browser -.->|"first load"| static
-  api -->|"Mongoose"| db
+  api -->|"data-access layer"| db
   api -->|"verify ID token"| idp
 ```
 
@@ -26,21 +26,21 @@ Caption: one sentence. `Files: apps/api/src/main.ts, apps/api/src/auth/auth.guar
 ```mermaid
 sequenceDiagram
   actor user
-  participant dialog as CaptureDialog
-  participant store as EntriesStore
-  participant api as EntriesController
-  participant svc as EntriesService
-  participant expenses as expenses collection
-  user->>dialog: "-14 taxi #travel"
-  dialog->>store: capture(raw)
-  store->>api: POST /api/entries {raw}
-  api->>svc: create(userId, dto, clientDate)
-  svc->>svc: parseCapture(raw, today) → expense
-  svc->>expenses: insert {userId, project, amount, date}
-  expenses-->>svc: Expense
-  svc-->>store: CaptureResponse {kind: expense}
-  store-->>dialog: toast "−14 € logged to Travel"
-  Note over dialog,store: dashboard card updates on its next GET /api/dashboard
+  participant dialog as CreateOrderDialog
+  participant store as OrdersStore
+  participant api as OrdersController
+  participant svc as OrdersService
+  participant orders as orders table
+  user->>dialog: submits the order form
+  dialog->>store: create(draft)
+  store->>api: POST /api/orders {draft}
+  api->>svc: create(userId, dto)
+  svc->>svc: validate(dto) → order
+  svc->>orders: insert {userId, project, total, createdAt}
+  orders-->>svc: Order
+  svc-->>store: OrderResponse {status: created}
+  store-->>dialog: toast "Order created"
+  Note over dialog,store: the orders list updates on its next GET /api/orders
 ```
 
 Caption: what the flow decides, and what it does not do. `Files: …`.
@@ -50,25 +50,25 @@ Caption: what the flow decides, and what it does not do. `Files: …`.
 ```mermaid
 erDiagram
   users ||--o{ projects : userId
-  users ||--o{ entries : userId
-  users ||--o{ expenses : userId
-  projects ||--o{ expenses : "project = slug"
+  users ||--o{ orders : userId
+  orders ||--o{ invoices : orderId
+  projects ||--o{ orders : "project = slug"
   users {
-    ObjectId _id PK
-    string googleId UK
+    string id PK
+    string externalId UK
   }
   projects {
-    ObjectId _id PK
-    ObjectId userId FK
+    string id PK
+    string userId FK
     string slug "unique with userId"
-    array blocks "embedded"
+    array members "embedded"
   }
-  expenses {
-    ObjectId _id PK
-    ObjectId userId FK
+  orders {
+    string id PK
+    string userId FK
     string project "slug"
-    string date "index with userId, project"
+    string createdAt "index with userId, project"
   }
 ```
 
-Caption: the ownership rule and how joins work (by slug string, not by id). `Files: apps/api/src/*/*.schema.ts`.
+Caption: the ownership rule and how joins work (by slug string, not by id). `Files: apps/api/src/*/*.entity.ts`.

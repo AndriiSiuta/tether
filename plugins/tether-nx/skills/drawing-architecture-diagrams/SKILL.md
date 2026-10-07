@@ -16,7 +16,7 @@ A diagram in a repo is read in a code review, at 80 columns, by someone who did 
 - A doc needs to show boundaries (context/container), an order of calls (sequence), or storage keys and relations (ERD)
 - A review found a flow nobody could explain in words
 
-Not for: class diagrams, mind maps, pie charts, org charts, UI mockups (use `design` or a screenshot), or a list of files (use a table).
+Not for: class diagrams, mind maps, pie charts, org charts, UI mockups (use a screenshot), or a list of files (use a table).
 
 ## Three shapes, fixed caps
 
@@ -35,15 +35,15 @@ Every label states something verified in a file you opened: the header or cookie
 ## Where the diagram lives
 
 - Inline Mermaid fence in the markdown doc, so it diffs in git and renders on GitHub. Default.
-- FigJam via `figma:figma-generate-diagram` only when the reader wants to present or edit it; load that skill first (it is mandatory before the tool), and still paste the same Mermaid source into the doc.
-- Artifacts / SVG: the `artifact-diagramming` skill, not this one.
+- FigJam via `figma:figma-generate-diagram`, if installed, only when the reader wants to present or edit it; load that skill first (it is mandatory before the tool), and still paste the same Mermaid source into the doc.
+- Artifacts / SVG: the `artifact-diagramming` skill, if installed, not this one.
 
 ## Mermaid rules (shared with the FigJam skill)
 
 - Node ids camelCase, no spaces; not `end`, `graph`, `subgraph`.
 - Labels with `(`, `:`, `/`, `|` or quotes go in `["..."]`; edge labels in `-->|"..."|`.
 - Line breaks inside a label are `<br/>`; `\n` renders literally.
-- Sequence participants get short aliases: `participant api as Nest API`.
+- Sequence participants get short aliases: `participant api as OrdersApi`.
 - No styling, colours or icons; the doc's theme does that.
 
 ## Steps

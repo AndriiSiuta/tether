@@ -91,4 +91,4 @@ Caught one: delete it, write the Files row or the Open question instead.
 
 ## Example
 
-`references/example-report.md` — a filled report for a recurring monthly amount on a budget block.
+`references/example-report.md` — a filled report for a recurring fixed fee on project invoices.

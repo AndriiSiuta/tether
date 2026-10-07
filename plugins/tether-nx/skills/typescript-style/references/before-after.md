@@ -42,7 +42,7 @@ readonly view = computed<TableView<Order>>(() => {
 });
 ```
 
-`deriveTableView` (a pure helper in the workspace's `util` library, with `TableView` and `TableViewSource` in a sibling model file) reads the held rows before the error flag: signals are lazy, and an error-first check would leave the pre-error rows to reappear on the next customer switch. The `linkedSignal` computation drops the held rows when the status is `'error'`, so a list from another customer never outlives a failed reload. `ready.rows` is typed `Row[]`, the array the table component owns and sorts in place through its custom-sort callback; it is always a fresh `filter` copy, so the source rows stay untouched.
+`deriveTableView` (a pure helper in the workspace's `util` library, with `TableView` and `TableViewSource` in a sibling model file) reads the held rows before the error flag: signals are lazy, and an error-first check would leave the pre-error rows to reappear on the next project switch. The `linkedSignal` computation drops the held rows when the status is `'error'`, so a list from another project never outlives a failed reload. `ready.rows` is typed `Row[]`, the array the table component owns and sorts in place through its custom-sort callback; it is always a fresh `filter` copy, so the source rows stay untouched.
 
 ```html
 @let state = view();
