@@ -24,6 +24,17 @@
         ],
         "matcher": "Edit|Write"
       }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/implementer-report.mjs\"",
+            "timeout": 10
+          }
+        ]
+      }
     ]
   }
 }
