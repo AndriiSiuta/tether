@@ -68,3 +68,25 @@ test('a missing denylist gives null', () => {
   const root = mkdtempSync(join(tmpdir(), 'tether-'));
   assert.equal(loadDenylist(join(root, '.neutrality-denylist')), null);
 });
+
+test('a denylisted term or a ticket in a file path is reported with line 0', () => {
+  const ticket = '#' + '12345';
+  const root = repo({ 'acme-docs/clean.md': 'nothing here\n', [`notes/${ticket}.md`]: 'ok\n' });
+  const findings = scanRepo(root, [/acme/iu]);
+  assert.deepEqual(findings, [
+    { path: 'acme-docs/clean.md', line: 0, check: 'denylist', match: 'acme' },
+    { path: `notes/${ticket}.md`, line: 0, check: 'ticket', match: ticket },
+  ]);
+});
+
+test('the copyright exemption covers the root and skill LICENSE files only', () => {
+  const line = `Copyright (c) 2026 ${NAME}\n`;
+  const root = repo({
+    'LICENSE': line,
+    'plugins/p/skills/s/LICENSE': line,
+    'plugins/p/LICENSE': line,
+    'docs/LICENSE.md': line,
+  });
+  const paths = scanRepo(root, [new RegExp('jane', 'iu')]).map((f) => f.path).sort();
+  assert.deepEqual(paths, ['docs/LICENSE.md', 'plugins/p/LICENSE']);
+});

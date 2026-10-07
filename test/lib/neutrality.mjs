@@ -1,7 +1,7 @@
 // Scans the files a public repo would publish for private terms, ticket references and unknown npm scopes.
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, statSync } from 'node:fs';
-import { basename, join } from 'node:path';
+import { join } from 'node:path';
 
 export const TICKET = /(?<![&\w])#\d{5}(?!\d)/g;
 export const SCOPE = /(?<![\w.@/])@([a-z0-9][a-z0-9._-]*)\//g;
@@ -25,6 +25,7 @@ export const ALLOWED_SCOPES = new Set([
 
 const MANIFEST_FIELDS = new Map([['.claude-plugin/marketplace.json', 'owner']]);
 const PLUGIN_MANIFEST = /^plugins\/[^/]+\/\.claude-plugin\/plugin\.json$/;
+const LICENSE_FILE = /^(?:plugins\/[^/]+\/skills\/[^/]+\/)?LICENSE$/;
 
 export function isBinary(buffer) {
   return buffer.subarray(0, 8192).includes(0);
@@ -57,7 +58,7 @@ function manifestText(path, text) {
 }
 
 function exemptLine(path, line) {
-  return basename(path).startsWith('LICENSE') && line.startsWith('Copyright (c)');
+  return LICENSE_FILE.test(path) && line.startsWith('Copyright (c)');
 }
 
 export function scanText(text, path, patterns) {
@@ -77,8 +78,17 @@ export function scanText(text, path, patterns) {
   return findings;
 }
 
+function scanPath(path, patterns) {
+  return scanText(path, path, patterns)
+    .filter((finding) => finding.check !== 'scope')
+    .map((finding) => ({ ...finding, line: 0 }));
+}
+
 export function scan({ root, files, patterns }) {
-  return files.flatMap((path) => scanText(manifestText(path, readFileSync(join(root, path), 'utf8')), path, patterns));
+  return files.flatMap((path) => [
+    ...scanPath(path, patterns),
+    ...scanText(manifestText(path, readFileSync(join(root, path), 'utf8')), path, patterns),
+  ]);
 }
 
 export function formatFindings(findings) {
