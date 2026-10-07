@@ -69,7 +69,7 @@ test('a file inside the root is formatted', () => {
   const file = touch(project, 'src/a.ts');
   const result = run(edit(file), project);
   assert.equal(result.status, 0);
-  assert.deepEqual(formatted(), [`prettier --write --ignore-unknown --log-level warn ${file}`]);
+  assert.deepEqual(formatted(), [`--no-install prettier --write --ignore-unknown --log-level warn ${file}`]);
 });
 
 test('a path under a prefix entry is never formatted', () => {
@@ -119,4 +119,28 @@ test('malformed stdin, a missing field or a missing file exits 0 without formatt
     assert.equal(result.status, 0);
     assert.deepEqual(formatted(), []);
   }
+});
+
+test('npx never installs: without a local Prettier it is called with --no-install', () => {
+  const project = makeProject('no-install');
+  run(edit(touch(project, 'src/a.ts')), project);
+  const [line] = formatted();
+  assert.ok(line.startsWith('--no-install prettier '), line);
+});
+
+test('a project Prettier in node_modules/.bin is used instead of npx', () => {
+  const project = makeProject('local-bin');
+  const local = join(project, 'node_modules', '.bin', 'prettier');
+  mkdirSync(dirname(local), { recursive: true });
+  writeFileSync(local, `#!/usr/bin/env bash\necho "local $*" >> "${log}"\n`);
+  chmodSync(local, 0o755);
+  const file = touch(project, 'src/a.ts');
+  assert.equal(run(edit(file), project).status, 0);
+  assert.deepEqual(formatted(), [`local --write --ignore-unknown --log-level warn ${file}`]);
+});
+
+test('no formatSkip key formats nothing', () => {
+  const project = makeProject('no-skip-key', { protectedBranches: ['main'] });
+  assert.equal(run(edit(touch(project, 'src/a.ts')), project).status, 0);
+  assert.deepEqual(formatted(), []);
 });

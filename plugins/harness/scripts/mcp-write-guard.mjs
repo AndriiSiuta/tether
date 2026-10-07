@@ -1,5 +1,5 @@
 // PreToolUse, matcher mcp__.*: denies an MCP tool listed in harness.json mcpWriteDeny by name or pattern.
-// A server matches as `<server>` or as the plugin-provided `..._<server>`.
+// A server matches, case-insensitively and with non-alphanumeric runs as `_`, as `<server>` or as `..._<server>`.
 // Prints a PreToolUse deny and exits 0; exits 0 silently otherwise, and on malformed stdin or no harness.json.
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -14,8 +14,14 @@ export function splitToolName(toolName) {
   return match === null ? null : { server: match[1], tool: match[2] };
 }
 
+export function normaliseServer(name) {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+}
+
 export function serverMatches(server, ruleServer) {
-  return server === ruleServer || server.endsWith(`_${ruleServer}`);
+  const actual = normaliseServer(server);
+  const rule = normaliseServer(ruleServer);
+  return actual === rule || actual.endsWith(`_${rule}`);
 }
 
 function safeRegExp(pattern) {

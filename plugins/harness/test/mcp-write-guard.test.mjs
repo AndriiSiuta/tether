@@ -81,6 +81,8 @@ const DENIED = [
   ['mcp__atlassian__createJiraIssue', 'atlassian', '/^(create|edit|add|transition|update)/'],
   ['mcp__azure-devops__repo_pull_request_write', 'azure-devops', 'repo_pull_request_write'],
   ['mcp__plugin_figma_figma__use_figma', 'figma', 'use_figma'],
+  ['mcp__claude_ai_Figma__use_figma', 'figma', 'use_figma'],
+  ['mcp__claude_ai_Atlassian__createJiraIssue', 'atlassian', '/^(create|edit|add|transition|update)/'],
 ];
 
 for (const [toolName, server, matched] of DENIED) {
@@ -94,7 +96,7 @@ for (const [toolName, server, matched] of DENIED) {
   });
 }
 
-const ALLOWED = ['mcp__figma__get_metadata', 'mcp__sonarqube__search_my_sonarqube_projects', 'mcp__azure-devops__wit_get_work_item', 'Bash'];
+const ALLOWED = ['mcp__notfigma__use_figma', 'mcp__figma__get_metadata', 'mcp__sonarqube__search_my_sonarqube_projects', 'mcp__azure-devops__wit_get_work_item', 'Bash'];
 
 for (const toolName of ALLOWED) {
   test(`${toolName} is allowed`, () => {
