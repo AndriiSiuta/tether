@@ -1,0 +1,10 @@
+apiVersion: 1
+
+providers:
+  - name: "Harness"
+    type: file
+    disableDeletion: true
+    allowUiUpdates: false
+    options:
+      path: /otel-lgtm/grafana/conf/provisioning/dashboards/harness
+      foldersFromFilesStructure: false
