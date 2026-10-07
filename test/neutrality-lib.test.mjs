@@ -90,3 +90,13 @@ test('the copyright exemption covers the root and skill LICENSE files only', () 
   const paths = scanRepo(root, [new RegExp('jane', 'iu')]).map((f) => f.path).sort();
   assert.deepEqual(paths, ['docs/LICENSE.md', 'plugins/p/LICENSE']);
 });
+
+test('the repository slug from origin is exempt, the same owner name elsewhere is not', () => {
+  const owner = 'Jane' + 'Example';
+  const root = mkdtempSync(join(tmpdir(), 'tether-'));
+  execFileSync('git', ['init', '-q'], { cwd: root });
+  execFileSync('git', ['remote', 'add', 'origin', `https://github.com/${owner}/kit.git`], { cwd: root });
+  writeFileSync(join(root, 'README.md'), `add ${owner}/kit#v1\nwritten by ${owner}\n`);
+  const findings = scan({ root, files: ['README.md'], patterns: [new RegExp(owner, 'iu')] });
+  assert.deepEqual(findings.map((f) => `${f.path}:${f.line}`), ['README.md:2']);
+});

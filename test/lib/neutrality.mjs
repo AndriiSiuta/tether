@@ -56,14 +56,25 @@ function manifestText(path, text) {
   return JSON.stringify(json, null, 2);
 }
 
+export function repoSlug(root) {
+  try {
+    const url = execFileSync('git', ['remote', 'get-url', 'origin'], { cwd: root, stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
+    const match = url.match(/github\.com[:/]([^/\s]+\/[^/\s]+?)(?:\.git)?$/);
+    return match ? match[1] : null;
+  } catch {
+    return null;
+  }
+}
+
 function exemptLine(path, line) {
   return LICENSE_FILE.test(path) && line.startsWith('Copyright (c)');
 }
 
-export function scanText(text, path, patterns) {
+export function scanText(text, path, patterns, slug = null) {
   const findings = [];
-  text.split('\n').forEach((line, index) => {
-    if (exemptLine(path, line)) return;
+  text.split('\n').forEach((raw, index) => {
+    if (exemptLine(path, raw)) return;
+    const line = slug ? raw.split(slug).join('') : raw;
     const at = { path, line: index + 1 };
     for (const pattern of patterns ?? []) {
       const match = line.match(pattern);
@@ -83,10 +94,10 @@ function scanPath(path, patterns) {
     .map((finding) => ({ ...finding, line: 0 }));
 }
 
-export function scan({ root, files, patterns }) {
+export function scan({ root, files, patterns, slug = repoSlug(root) }) {
   return files.flatMap((path) => [
     ...scanPath(path, patterns),
-    ...scanText(manifestText(path, readFileSync(join(root, path), 'utf8')), path, patterns),
+    ...scanText(manifestText(path, readFileSync(join(root, path), 'utf8')), path, patterns, slug),
   ]);
 }
 
