@@ -39,3 +39,11 @@ test('ledger pre-approves its two scripts only', () => {
     'Bash(node ${CLAUDE_PLUGIN_ROOT}/scripts/ledger-stats.mjs:*)',
   ]);
 });
+
+for (const command of ['setup', 'eval', 'backup', 'metrics', 'telemetry']) {
+  test(`${command} is user-invoked only`, () => {
+    const text = readFileSync(join(ROOT, 'commands', `${command}.md`), 'utf8');
+    const frontmatter = text.split('---\n')[1];
+    assert.match(frontmatter, /^disable-model-invocation: true$/m);
+  });
+}

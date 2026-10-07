@@ -5,7 +5,7 @@ description: Use when a planned run (spec, plan, implementer and reviewer dispat
 
 # Run report
 
-One report per run, written by the dispatcher, at `<reports>/<YYYY-MM-DD>-<slug>-run-report.md` (`reports` in `.claude/harness.json`). It records what shipped, every ruling made on the way, and the token ledger. The project's verify step refuses a branch with an open PR until a report names that branch and carries a sign-off row.
+One report per run, written by the dispatcher, at `<reports>/<YYYY-MM-DD>-<slug>-run-report.md` (`reports` in `.claude/harness.json`). It records what shipped, every ruling made on the way, and the token ledger. If your project's verify step enforces it, a branch with an open PR is refused until a report names that branch and carries a sign-off row.
 
 ## Template
 
@@ -59,4 +59,4 @@ Agent ids: 1=<agent id>, 2=<agent id>
 3. Rulings are numbered in the order they were made, each with its cost if wrong.
 4. The click-through list is the union of every implementer's `Deferred:` items, without duplicates.
 5. The sign-off table stays empty until the person who verifies the run has done the click-through. Then add one row: the tip SHA that was verified (7 to 40 hex characters), the date, the name, and the checklist items that were checked. A later fix adds a new row for its new tip.
-6. The fix-round cap counts an implementer's stops per session and task, so a new session starts every task at zero. To reset a cap after an escalation within the same session, delete that task's file under `${CLAUDE_PLUGIN_DATA}/rounds/` (named by the SHA-1 of `<session_id>|Task <id>`) and record the reset as a ruling.
+6. The fix-round cap is checked when an implementer stops after a round, and its message names the rounds used. It counts an implementer's stops per session and task, so a new session starts every task at zero. To reset a cap after an escalation within the same session, delete that task's file under `${CLAUDE_PLUGIN_DATA}/rounds/` (named by the SHA-1 of `<session_id>|Task <id>`) and record the reset as a ruling.

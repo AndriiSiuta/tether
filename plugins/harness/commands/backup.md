@@ -1,9 +1,10 @@
 ---
-description: Print the command that writes an encrypted backup of the project's local-only harness files, for Andrii's own terminal
+disable-model-invocation: true
+description: Print the command that writes an encrypted backup of the project's local-only harness files, for the user's own terminal
 argument-hint: <dir>
 ---
 
-Give Andrii the backup command to run in his own terminal; never run it here. The encryptor asks for a passphrase, and that needs a TTY. The backup directory is: `$ARGUMENTS`.
+Give the user the backup command to run in their own terminal; never run it here. The encryptor asks for a passphrase, and that needs a TTY. The backup directory is: `$ARGUMENTS`.
 
 1. If the backup directory above is empty, print `pass the backup directory: /harness:backup <dir>` and stop.
 2. Otherwise print this command for him to run from any directory, with `<dir>` replaced by the backup directory exactly as given and `$CLAUDE_PROJECT_DIR` replaced by this project's absolute path:
