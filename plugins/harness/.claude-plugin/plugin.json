@@ -1,8 +1,9 @@
 {
   "name": "harness",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Project-neutral hooks and tools that read every project value from the project's .claude/harness.json: git and MCP write guards, report, spec and fix-round checks, settings setup, local telemetry, evals, metrics and an encrypted backup.",
   "author": {
     "name": "Andrii Siuta"
-  }
+  },
+  "license": "MIT"
 }
