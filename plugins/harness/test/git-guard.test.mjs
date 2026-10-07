@@ -75,15 +75,15 @@ for (const path of LOCAL_ONLY) {
   test(`a commit naming ${path} is blocked on a feature branch`, () => {
     const repo = makeRepo(`path-${path.replace(/\W/g, '-')}`);
     const message = evaluate(hook(`git commit --only -m "x" -- ${path}/file README`, repo));
-    assert.match(message, /names a local-only path/);
+    assert.match(message, /the commit names a local-only harness path \(/);
     for (const listed of LOCAL_ONLY) assert.ok(message.includes(listed));
   });
 }
 
 test('a local-only path after a quote or = is blocked', () => {
   const repo = makeRepo('quoted');
-  assert.match(evaluate(hook('git commit -m "x" -- "docs/adr/one.md"', repo)), /local-only/);
-  assert.match(evaluate(hook('git commit --pathspec-from-file=NOTES.local.md', repo)), /local-only/);
+  assert.match(evaluate(hook('git commit -m "x" -- "docs/adr/one.md"', repo)), /local-only harness path/);
+  assert.match(evaluate(hook('git commit --pathspec-from-file=NOTES.local.md', repo)), /local-only harness path/);
 });
 
 test('a commit naming only other paths on a feature branch passes', () => {

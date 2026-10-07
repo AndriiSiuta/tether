@@ -51,7 +51,7 @@ export function findProblems({ command, dir, config }) {
   }
   const pattern = localOnlyPattern(localOnlyPaths);
   if (commits && pattern?.test(command.slice(command.search(/\bcommit\b/)))) {
-    problems.push(`the commit names a local-only path (${localOnlyPaths.join(', ')})`);
+    problems.push(`the commit names a local-only harness path (${localOnlyPaths.join(', ')})`);
   }
   if (pushes && branch !== '' && !onProtected && protectedBranches.length > 0 && localOnlyPaths.length > 0) {
     const upstream = `origin/${protectedBranches[0]}`;
