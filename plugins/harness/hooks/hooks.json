@@ -11,6 +11,16 @@
           }
         ],
         "matcher": "Bash"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/mcp-write-guard.mjs\"",
+            "timeout": 10
+          }
+        ],
+        "matcher": "mcp__.*"
       }
     ],
     "PostToolUse": [
@@ -23,6 +33,16 @@
           }
         ],
         "matcher": "Edit|Write"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/untrusted-input.mjs\"",
+            "timeout": 10
+          }
+        ],
+        "matcher": "mcp__.*|WebFetch"
       }
     ],
     "SubagentStop": [
