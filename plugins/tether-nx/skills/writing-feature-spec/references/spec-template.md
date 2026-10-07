@@ -37,7 +37,7 @@ State plainly: served today / must be added by the backend (with its ticket, if 
 
 ## Placement
 
-Each by rule id: the library and its `type:` (`NX-1`, `NX-3`); the slice the work lands in (`FEAT-1`); where state lives — an existing store, a signal service or component state (`SIG-4`); the provider scope (`DI-1`, `DI-2`); the feature flag that gates it, if any, and its key. Anything new in a shared library needs a reason and the library whose `type:` fits.
+By rule id where one exists: the library and its `type:` (`NX-1`, `NX-3`); the slice the work lands in (`FEAT-1`); where state lives — an existing store, a signal service or component state (`SIG-4`); the provider scope (`DI-1`, `DI-2`); the feature flag that gates it, if any, and its key. Anything new in a shared library needs a reason and the library whose `type:` fits.
 
 ## Tests
 

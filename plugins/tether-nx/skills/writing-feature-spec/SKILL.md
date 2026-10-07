@@ -33,7 +33,7 @@ Caps: 1,500 words in total, tables and type blocks included; tether's spec-cap h
 - **Write the copy strings first.** The table has a key column plus one column per language in the rules file's `i18n` (for example `en`, `de`); it forces the decisions, and a feature with an empty language column is not specced (`COPY-1`). Keys follow the project's translation-key convention.
 - **Amend by appending.** When a change alters an earlier spec, say "amends `<path>` §n" in the new spec's header and add a dated entry under `## Amendments` at the end of the earlier file giving the replacement row; the earlier body is never rewritten, and there is no second spec about the same screen.
 - **Name the backend contract.** Say which endpoint already serves the data and which fields the client model keeps, or say plainly that the backend must add it and the work is blocked.
-- **Placement is a decision.** Name the library, the slice, where state lives, the provider scope and the feature flag that gates the feature, if any, each by rule id.
+- **Placement is a decision.** Name the library, the slice, where state lives, the provider scope and the feature flag that gates the feature, if any, by rule id where one exists.
 - **More than three open decisions means the brainstorm is not finished.** Go back rather than writing them all down.
 
 ## Steps

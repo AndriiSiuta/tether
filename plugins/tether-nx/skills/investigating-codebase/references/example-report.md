@@ -18,7 +18,7 @@ Verdict: needs spec change
 | web | `apps/web/src/app/data/dashboard.store.ts` | `restate()` recomputes `left` on optimistic edit | edit |
 | web | `apps/web/src/app/ui/blocks/budget-full.component.ts` | project-page view, headline, meter | edit |
 | web | `apps/web/src/app/ui/blocks/budget-summary.component.ts` | dashboard-card summary line | edit |
-| docs | `docs/superpowers/specs/2026-01-07-v2-design.md` §4, §10 | block fields table, `left` formula | edit |
+| docs | `docs/specs/2026-01-07-v2-design.md` §4, §10 | block fields table, `left` formula | edit |
 | docs | `docs/superpowers/plans/2026-01-07-v2-follow-ups.md` | "amount 0 → set your budget" is fine as is | read |
 
 ## Flow
@@ -42,6 +42,6 @@ Edit: `block-form` → `edit-blocks-dialog` → `ProjectsStore` → `PUT /api/pr
 - No automated tests; period-boundary math is verified by hand only
 
 ## Open questions (≤3)
-- Is the recurring amount a field on the block, or a expense row auto-created each period?
+- Is the recurring amount a field on the block, or an expense row auto-created each period?
 - Does a block with `amount` 0 and a recurring amount count as "set", and can it trigger "over"?
 - Is the amount counted in full on the reset day, or spread across the period?

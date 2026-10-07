@@ -84,7 +84,7 @@ The exception that is not an exception: a *container* component may inject its o
 
 ## Refactor 3: the cross-feature widget
 
-Feature `home` must show a invoices summary owned by feature `invoices`.
+Feature `home` must show an invoice summary owned by feature `invoices`.
 
 ```
 Wrong                                   Right

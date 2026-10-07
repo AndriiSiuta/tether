@@ -9,7 +9,7 @@ Read `.claude/tether-nx.md` first; where it differs from this file, it wins.
 
 ## Overview
 
-State is a type, not a sentinel. A piece of code says what it holds: a discriminated union for a screen state, a narrow return type for a value that may be absent, a pure function for anything that reads rows. Code compiles under `strict`, `strictNullChecks` included (`TS-1`); where the workspace compiler is looser, write as if it were on, and the rules file's `verify` command proves it for the folders you touched.
+State is a type, not a sentinel. A piece of code says what it holds: a discriminated union for a screen state, a narrow return type for a value that may be absent, a pure function for anything that reads rows. Code compiles under `strict`, `strictNullChecks` included (`TS-1`); where the workspace compiler is looser, write as if it were on, and the rules file's `verify` command (default in `angular-nx-conventions`) proves it for the folders you touched.
 
 ## The recipe
 
@@ -29,7 +29,7 @@ State is a type, not a sentinel. A piece of code says what it holds: a discrimin
 
 ## Before you report a task done
 
-- The rules file's `verify` command passes, and the folders you touched compile under `strictNullChecks` (`TS-1`).
+- The rules file's `verify` command (default in `angular-nx-conventions`) passes, and the folders you touched compile under `strictNullChecks` (`TS-1`).
 - No occurrence of `prefer-readonly`, `prefer-optional-chain`, `prefer-includes`, `switch-exhaustiveness-check`, `no-non-null-assertion`, `no-unneeded-ternary`, `no-param-reassign` in a file you touched.
 - Every state kind of a view union has a spec case.
 

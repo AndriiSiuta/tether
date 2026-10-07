@@ -20,9 +20,15 @@ After — one union derived from what `resource()` already exposes; the template
 ```ts
 type TableView<Row> = { kind: 'loading' } | { kind: 'ready'; rows: Row[] } | { kind: 'empty' } | { kind: 'error' };
 
-private readonly keptRows = linkedSignal<readonly Order[] | undefined, readonly Order[] | undefined>({
-  source: () => (this.ordersResource.hasValue() ? this.ordersResource.value() : undefined),
-  computation: (value, previous) => value ?? previous?.value,
+private readonly keptRows = linkedSignal<
+  { status: ResourceStatus; rows: readonly Order[] | undefined },
+  readonly Order[] | undefined
+>({
+  source: () => ({
+    status: this.ordersResource.status(),
+    rows: this.ordersResource.hasValue() ? this.ordersResource.value() : undefined,
+  }),
+  computation: ({ status, rows }, previous) => (status === 'error' ? undefined : (rows ?? previous?.value)),
 });
 
 readonly view = computed<TableView<Order>>(() => {
