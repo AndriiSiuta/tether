@@ -3,7 +3,7 @@
 // Prints a PreToolUse deny and exits 0; exits 0 silently otherwise, and on malformed stdin or no harness.json.
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { loadHookContext, readStdinJson } from './lib/config.mjs';
+import { loadSecurityContext, readStdinJson } from './lib/config.mjs';
 
 export function denyNames(config) {
   return (config?.mcpWriteDeny ?? []).flatMap((rule) => (rule.tools ?? []).map((tool) => `mcp__${rule.server}__${tool}`));
@@ -55,7 +55,7 @@ export function evaluate(input, config) {
 async function main() {
   const input = await readStdinJson();
   if (input === null) return 0;
-  const found = loadHookContext(input);
+  const found = loadSecurityContext(input);
   if (found === null) return 0;
   const output = evaluate(input, found.config);
   if (output !== null) process.stdout.write(`${JSON.stringify(output)}\n`);

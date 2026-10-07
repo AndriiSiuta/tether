@@ -5,7 +5,7 @@ import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { findConfig, loadHookContext } from '../scripts/lib/config.mjs';
+import { findConfig, loadHookContext, loadSecurityContext } from '../scripts/lib/config.mjs';
 
 const CLI = join(dirname(fileURLToPath(import.meta.url)), '..', 'scripts', 'lib', 'config.mjs');
 const CONFIG = {
@@ -105,6 +105,22 @@ test('a config that is not an object gives null', () => {
 test('loadHookContext reads the cwd of the hook input', () => {
   const repo = makeRepo('hook', CONFIG);
   assert.deepEqual(loadHookContext({ cwd: repo }), { root: repo, config: CONFIG });
+});
+
+test('loadSecurityContext prefers CLAUDE_PROJECT_DIR over the hook cwd, else falls back to it', () => {
+  const project = makeRepo('security-project', CONFIG);
+  const other = makeRepo('security-other', { protectedBranches: ['trunk'] });
+  const bare = makeRepo('security-bare');
+  try {
+    process.env.CLAUDE_PROJECT_DIR = project;
+    assert.deepEqual(loadSecurityContext({ cwd: other }), { root: project, config: CONFIG });
+    process.env.CLAUDE_PROJECT_DIR = bare;
+    assert.deepEqual(loadSecurityContext({ cwd: other }), { root: other, config: { protectedBranches: ['trunk'] } });
+    delete process.env.CLAUDE_PROJECT_DIR;
+    assert.deepEqual(loadSecurityContext({ cwd: other }), { root: other, config: { protectedBranches: ['trunk'] } });
+  } finally {
+    delete process.env.CLAUDE_PROJECT_DIR;
+  }
 });
 
 test('--get prints an array one entry per line', () => {

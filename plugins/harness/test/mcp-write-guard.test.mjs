@@ -133,6 +133,18 @@ test('denyNames lists every tools entry in config order', () => {
   assert.deepEqual(denyNames({}), []);
 });
 
+test('CLAUDE_PROJECT_DIR naming a configured project still denies when the cwd is elsewhere', () => {
+  const project = makeProject('env-project');
+  const elsewhere = makeProject('env-elsewhere', null);
+  const result = spawnSync(process.execPath, [CLI], {
+    input: JSON.stringify(call('mcp__plugin_figma_figma__use_figma', elsewhere)),
+    encoding: 'utf8',
+    env: { ...process.env, CLAUDE_PROJECT_DIR: project },
+  });
+  assert.equal(result.status, 0);
+  assert.equal(JSON.parse(result.stdout).hookSpecificOutput.permissionDecision, 'deny');
+});
+
 test('no harness.json exits 0 silently', () => {
   const project = makeProject('no-config', null);
   const result = runCli(JSON.stringify(call('mcp__figma__use_figma', project)));

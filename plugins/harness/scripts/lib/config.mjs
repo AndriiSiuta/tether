@@ -51,6 +51,12 @@ export function loadHookContext(input) {
   return findConfig(input?.cwd ?? process.env.CLAUDE_PROJECT_DIR ?? process.cwd());
 }
 
+export function loadSecurityContext(input) {
+  const projectDir = process.env.CLAUDE_PROJECT_DIR;
+  const fromProject = projectDir ? findConfig(projectDir) : null;
+  return fromProject ?? loadHookContext(input);
+}
+
 export async function readStdinJson() {
   let raw = '';
   process.stdin.setEncoding('utf8');

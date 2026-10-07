@@ -1,10 +1,10 @@
 // PreToolUse, matcher Bash: blocks a git commit or push on a protected branch or carrying a local-only path.
-// The directory is taken from a leading `cd <dir>` or `git -C <dir>`, else the hook cwd.
+// The branch is read in a leading `cd <dir>` or `git -C <dir>`, else the hook cwd; harness.json prefers CLAUDE_PROJECT_DIR.
 // Exit 2 with one stderr paragraph blocks; exit 0 otherwise, and on malformed stdin or no harness.json.
 import { execFileSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { findConfig, readStdinJson } from './lib/config.mjs';
+import { loadSecurityContext, readStdinJson } from './lib/config.mjs';
 
 function git(dir, args) {
   return execFileSync('git', args, { cwd: dir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
@@ -70,7 +70,7 @@ export function evaluate(input, base = input?.cwd ?? process.env.CLAUDE_PROJECT_
   const { commits, pushes } = classify(command);
   if (!commits && !pushes) return null;
   const dir = commandDir(command, base);
-  const found = findConfig(dir);
+  const found = loadSecurityContext({ cwd: dir });
   if (found === null) return null;
   const problems = findProblems({ command, dir, config: found.config });
   return problems.length === 0 ? null : `git guard blocked the command: ${problems.join('; ')}.`;

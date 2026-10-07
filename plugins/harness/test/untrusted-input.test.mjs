@@ -75,6 +75,18 @@ test('WebFetch matches exactly, not as a prefix', () => {
   assert.equal(evaluate(result('WebFetchExtra', '/x'), CONFIG), null);
 });
 
+test('CLAUDE_PROJECT_DIR naming a configured project still notes when the cwd is elsewhere', () => {
+  const project = makeProject('env-project');
+  const elsewhere = makeProject('env-elsewhere', null);
+  const run = spawnSync(process.execPath, [CLI], {
+    input: JSON.stringify(result('WebFetch', elsewhere)),
+    encoding: 'utf8',
+    env: { ...process.env, CLAUDE_PROJECT_DIR: project },
+  });
+  assert.equal(run.status, 0);
+  assert.equal(JSON.parse(run.stdout).hookSpecificOutput.additionalContext, expectedNote('WebFetch'));
+});
+
 test('no harness.json exits 0 silently', () => {
   const project = makeProject('no-config', null);
   const run = runCli(JSON.stringify(result('WebFetch', project)));

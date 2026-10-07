@@ -3,7 +3,7 @@
 // Prints a PostToolUse additionalContext and exits 0; exits 0 silently otherwise, and on malformed stdin or no harness.json.
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { loadHookContext, readStdinJson } from './lib/config.mjs';
+import { loadSecurityContext, readStdinJson } from './lib/config.mjs';
 import { serverMatches, splitToolName } from './mcp-write-guard.mjs';
 
 function sourceMatches(toolName, source) {
@@ -33,7 +33,7 @@ export function evaluate(input, config) {
 async function main() {
   const input = await readStdinJson();
   if (input === null) return 0;
-  const found = loadHookContext(input);
+  const found = loadSecurityContext(input);
   if (found === null) return 0;
   const output = evaluate(input, found.config);
   if (output !== null) process.stdout.write(`${JSON.stringify(output)}\n`);

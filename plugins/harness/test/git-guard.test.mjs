@@ -169,6 +169,26 @@ test('no harness.json exits 0 even on main', () => {
   assert.equal(result.stderr, '');
 });
 
+function runCliWithProject(stdin, projectDir) {
+  return spawnSync(process.execPath, [CLI], { input: stdin, encoding: 'utf8', env: { ...process.env, CLAUDE_PROJECT_DIR: projectDir } });
+}
+
+test('CLAUDE_PROJECT_DIR supplies the config while the branch is read in the command dir', () => {
+  const project = makeRepo('env-project', { branch: 'feature' });
+  const target = makeRepo('env-target-main', { config: null, branch: 'main' });
+  const blocked = runCliWithProject(JSON.stringify(hook(`git -C ${target} commit -m x`, project)), project);
+  assert.equal(blocked.status, 2);
+  assert.match(blocked.stderr, /is on main/);
+});
+
+test('CLAUDE_PROJECT_DIR on main does not block a commit in a command dir on a feature branch', () => {
+  const project = makeRepo('env-project-main', { branch: 'main' });
+  const target = makeRepo('env-target-feature', { config: null, branch: 'feature' });
+  const result = runCliWithProject(JSON.stringify(hook(`git -C ${target} commit -m x`, project)), project);
+  assert.equal(result.status, 0);
+  assert.equal(result.stderr, '');
+});
+
 test('a directory outside git exits 0', () => {
   const dir = join(sandbox, 'not-a-repo');
   mkdirSync(join(dir, '.claude'), { recursive: true });
