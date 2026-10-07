@@ -1,0 +1,17 @@
+{
+  "description": "Harness hooks — each reads the project's .claude/harness.json and does nothing without it",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/git-guard.mjs\"",
+            "timeout": 10
+          }
+        ],
+        "matcher": "Bash"
+      }
+    ]
+  }
+}
