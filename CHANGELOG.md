@@ -2,6 +2,19 @@
 
 All notable changes to the `tether` marketplace and its plugins. Versions follow the plugins' `version` fields; tags cover the whole repository.
 
+## Unreleased
+
+### tether-nx
+- Five eval cases under `plugins/tether-nx/evals/` in the `claude plugin eval` format: the reviewer flags `DI-2` and `FEAT-3`, the reviewer blocks without a mode, the planner's task headings and cap, and the implementer's `Blocked:` report on open placement. See the plugin README's Evals section.
+
+### Repository
+- CI on push and pull request to `main`: `npm test` on Node 24 and `claude plugin validate` for the marketplace and both plugins. The neutrality denylist check is skipped in CI with a visible notice.
+- `SECURITY.md` (supported versions, private reporting, what counts) and `docs/threat-model.md` (inputs, guards, residual risks).
+- `CONTRIBUTING.md`: setup, the inert-by-default and fail-open hook rules, the neutrality denylist, commit style, and stable `tether-nx` rule ids.
+- Issue forms (bug, guard gap, rule doesn't fit) with blank issues off, and a pull request template.
+- Root README: CI badge, context cost estimates, platforms, and links to the security and contributing docs.
+- The neutrality scope allowlist accepts the Claude Code CLI's npm scope.
+
 ## v0.2.0
 
 ### tether 0.2.0
