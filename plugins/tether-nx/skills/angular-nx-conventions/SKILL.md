@@ -1,6 +1,6 @@
 ---
 name: angular-nx-conventions
-description: Use when placing, writing, planning or reviewing code in an Angular Nx workspace - a new library, screen, route, component, service, store, translation key or spec - before the code is written and again before the work is called done. Holds the rule ids agents cite and a project overrides.
+description: Use when placing, writing, planning or reviewing code in an Angular Nx workspace - a new library, screen, route, component, service, store, translation key or spec - before the code is written and again before the work is called done. Holds the rule ids agents cite and that a project can override.
 ---
 
 # Angular Nx conventions
@@ -77,12 +77,13 @@ An override names one id. A rule the file does not name keeps its default. A rul
 - What another domain renders is a ui library; what another domain injects or types against is a data-access library (`FEAT-3`). A routeless widget another domain renders is ui plus data-access, never a feature.
 - A test generator lives in the scope's testing library and is imported from specs only. A data-access library's specs never import their own scope's testing library: the generator imports that library's models, so it is a cycle (`NX-2`).
 
-## Where this skill departs from `angular-architecture`
+## Where this skill departs from `angular-architecture` and the vendored skills
 
 - `FEAT-3` forbids feature → feature outright; two features that need the same component share a ui library, and two that need the same data share a data-access library.
 - Nx libraries replace `features/` folders: a domain is a set of libraries tagged by `NX-1`, not a folder tree inside the app (`NX-3`).
 - No new resolver: a screen's record loads through a `resource`, see [references/signals.md](references/signals.md).
-- Where the two skills disagree, this skill wins, and the rules file wins over both.
+- References inside the vendored `ng-performance` and `ng-accessibility` to house rules (`AGENTS.md`, `style-guide/*`, `create-e2e-tests`, "this project", the workshop) mean the upstream project they came from, not this one. This skill and the project's rules file win where they differ. Notably, `CMP-1` sets `OnPush` explicitly; on an Angular version whose default is already `OnPush`, `CMP-1` means "never opt out of `OnPush`".
+- Where this skill and `angular-architecture` disagree, this skill wins, and the rules file wins over both.
 
 ## Done when
 
@@ -102,6 +103,7 @@ An override names one id. A rule the file does not name keeps its default. A rul
 - A static import of a lazily loaded feature library outside the app's route table (`FEAT-3`, `NX-5`).
 - A domain service registered with `providedIn: 'root'` instead of in `<domain>Providers` (`DI-2`).
 - Re-providing in a spec what the shared Jest setup already provides: the second copy shadows the real one.
-- The library's environment read by importing the app's environment file; a library injects a token the app provides (`NX-3`).
+- The library's environment read by importing the app's environment file; a library injects a token the app provides (`NX-2`).
 - `toObservable`, a Subject + switchMap pipeline or an Observable-returning service in new code (`SIG-2`).
-- A comment or JSDoc on new code, an interface inside a service file, or a lint rule silenced instead of the file fixed (`CMP-2`, `CMP-3`).
+- A comment or JSDoc on new code (`CMP-3`), or an interface inside a service file (`CMP-2`).
+- A lint rule silenced instead of the file fixed.

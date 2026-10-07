@@ -41,6 +41,8 @@ Enforces `NX-2` and `NX-4`, reads the `NX-1` tags, and catches `FEAT-3`.
 | `type:util` | `type:util` |
 | `type:testing` | `type:testing`, `type:data-access`, `type:util` |
 
+The table is for production files. Specs get one override: a second config block whose `files` are `**/*.spec.ts` (and the test setup files) repeats the table with `type:testing` added to every row, so a spec may import a testing library while production code may not (`NX-2`).
+
 Scope privacy is a second set of rows: a library tagged `scope:orders` and `type:feature` may be depended on only by `scope:orders` or the shell. Keep `allow` and any ignored cycle empty; an exception is a rule-file override, not a lint config edit. Run it as its own script so the CI step fails on a finding even when the general lint is not gated.
 
 ## `GUARD-3`: provider census
