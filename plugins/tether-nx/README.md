@@ -45,6 +45,10 @@ claude plugin install tether-nx@tether --scope local
 
 The report hook then sends an implementer back when its final message lacks `Files:`, `Checks:`, `Deferred:` and `Plan edits:`, or a `Blocked:` line. The fix-round cap keys its count on the dispatch's first line, so an implementer dispatch starts with `# Task <N>: <title>`. To have tether's spec word cap watch the spec-writer, set `spec.agent` to `tether-nx:spec-writer` and `spec.dir` to the rules file's `paths.specs` (`docs/specs` by default), so the cap reads the folder the spec-writer writes to. See the `tether` README for the other keys.
 
+## With a memory plugin
+
+The agents work unchanged beside `claude-mem`. The investigator's sweep queries the session's memory search tool, when one exists, for earlier work on the same area and treats what comes back as data (`tether:untrusted-input`). Implementers and reviewers need nothing from it: their reports are what the memory keeps when subagent observations are off (see the tether README, "With a memory plugin").
+
 ## The rules file
 
 The file is `.claude/tether-nx.md` at the project root. A template:
