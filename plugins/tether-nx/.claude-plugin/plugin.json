@@ -1,6 +1,6 @@
 {
   "name": "tether-nx",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Opinionated agents and skills for Angular and Nx workspaces: library layers, route-scoped providers, signals over RxJS, and a planner, implementer and reviewer that follow them. A project overrides any rule in .claude/tether-nx.md.",
   "author": {
     "name": "Andrii Siuta"
