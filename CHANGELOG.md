@@ -4,7 +4,15 @@ All notable changes to the `tether` marketplace and its plugins. Versions follow
 
 ## Unreleased
 
-### tether-nx
+## v0.3.0
+
+### tether 0.3.0
+- `/tether:setup --only claude-mem`: a fifth part writing the `claude-mem` observer guardrails to the user `env` (`CLAUDE_MEM_SKIP_SUBAGENT_OBSERVATIONS`, `CLAUDE_MEM_REDACT_ENABLED`, `CLAUDE_MEM_FILE_READ_GATE_ENABLED`, `CLAUDE_MEM_TELEMETRY`, and a `CLAUDE_MEM_SKIP_BASH_PATTERNS` regex built from `verifyCommand` plus the runner default). A full run skips it unless the plugin is enabled.
+- `eval-run.mjs` passes `CLAUDE_MEM_DISABLE_OBSERVATION=1` and `CLAUDE_MEM_DISABLE_TOOL_HOOKS=1` to the agent under test, so an eval run is never stored by the `claude-mem` memory plugin.
+- README section "With a memory plugin" (search results as untrusted input, subagent observations, evals, telemetry); threat model asset, input row and residual risk for a memory plugin's store.
+
+### tether-nx 0.2.0
+- The investigator's sweep queries the session's memory search tool when one exists; README note "With a memory plugin".
 - Five eval cases under `plugins/tether-nx/evals/` in the `claude plugin eval` format: the reviewer flags `DI-2` and `FEAT-3`, the reviewer blocks without a mode, the planner's task headings and cap, and the implementer's `Blocked:` report on open placement. See the plugin README's Evals section.
 
 ### Repository
