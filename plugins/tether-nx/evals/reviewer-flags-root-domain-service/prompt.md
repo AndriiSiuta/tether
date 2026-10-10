@@ -11,7 +11,7 @@ Dispatch the `tether-nx:reviewer` agent with the brief between BEGIN BRIEF and E
 
 BEGIN BRIEF
 Mode: conventions
-Review the change below. The workspace is the read-only `workspace` directory added to this session; it has no git history, so the change is given as a diff, and the files after the change are in the workspace. There is no verify command output for this change.
+Review the change below. The workspace is the read-only `workspace` directory added to this session; it has no git history, so the change is given as a diff, and the files after the change are in the workspace. There is no verify command output for this change. The new service keeps the exports the order list screen has made and is injected only by that screen; it talks to no API.
 
 ```diff
 diff --git a/libs/orders/data-access/src/lib/models/order-export.model.ts b/libs/orders/data-access/src/lib/models/order-export.model.ts
@@ -27,18 +27,17 @@ diff --git a/libs/orders/data-access/src/lib/services/order-export.service.ts b/
 new file mode 100644
 --- /dev/null
 +++ b/libs/orders/data-access/src/lib/services/order-export.service.ts
-@@ -0,0 +1,13 @@
-+import { HttpClient } from '@angular/common/http';
-+import { Injectable, inject } from '@angular/core';
-+import { firstValueFrom } from 'rxjs';
+@@ -0,0 +1,12 @@
++import { Injectable, signal } from '@angular/core';
 +import { OrderExport } from '../models/order-export.model';
 +
 +@Injectable({ providedIn: 'root' })
 +export class OrderExportService {
-+  private readonly http = inject(HttpClient);
++  private readonly exports = signal<readonly OrderExport[]>([]);
++  readonly all = this.exports.asReadonly();
 +
-+  fetchExport(orderId: string): Promise<OrderExport> {
-+    return firstValueFrom(this.http.get<OrderExport>(`/api/orders/${orderId}/export`));
++  record(orderId: string, url: string): void {
++    this.exports.update((list) => [...list, { orderId, url }]);
 +  }
 +}
 ```

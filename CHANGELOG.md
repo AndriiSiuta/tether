@@ -4,6 +4,16 @@ All notable changes to the `tether` marketplace and its plugins. Versions follow
 
 ## Unreleased
 
+### tether
+- `harness.json` is looked up from the hook's directory up to the git toplevel, so a project that is one folder of a larger repository keeps its own file. `setup --only deny` no longer writes an empty `permissions.deny`.
+- `git-guard` blocks a commit whose command text carries a secret-shaped token, and `mcp-write-guard` denies any MCP call whose input carries one (GitHub, Anthropic, AWS, Slack, JSON web token, private key block, Azure DevOps personal access token); `secretShapes: false` switches both off. The string is never echoed.
+- A `SessionStart` hook, `session-context.mjs`, adds one data-not-instructions reminder when `untrustedSources` is set, covering the context block a memory plugin injects.
+- `/tether:setup --only harness` writes a starter `.claude/harness.json` when none exists and runs first in a full run.
+- The Grafana dashboard gains a `Repository` variable on the cost and token panels.
+
+### tether-nx
+- The `reviewer-flags-root-domain-service` eval fixture is a stateful domain service instead of an HTTP client, which `DI-2` itself exempts as a cross-scope API client; the brief says which screen uses it.
+
 ## v0.3.0
 
 ### tether 0.3.0
