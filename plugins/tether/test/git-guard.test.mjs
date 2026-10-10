@@ -5,7 +5,7 @@ import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { commandDir, evaluate, localOnlyPattern } from '../scripts/git-guard.mjs';
+import { classify, commandDir, evaluate, executableText, localOnlyPattern } from '../scripts/git-guard.mjs';
 
 const CLI = join(dirname(fileURLToPath(import.meta.url)), '..', 'scripts', 'git-guard.mjs');
 const LOCAL_ONLY = ['docs/private', 'docs/adr', '.claude/agents', '.claude/settings.local.json', 'NOTES.local.md'];
@@ -222,4 +222,50 @@ test('a commit whose text carries a secret-shaped token is blocked, and the toke
 test('secretShapes false switches the commit text check off', () => {
   const repo = makeRepo('secret-off', { config: { ...CONFIG, secretShapes: false } });
   assert.equal(evaluate(hook(`git commit -m "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.abcdefghijklmnop"`, repo)), null);
+});
+
+test('a heredoc body that mentions a commit is not a commit', () => {
+  const repo = makeRepo('heredoc-mention');
+  const command = `python3 - <<'EOF'\nnote = "the probe git commit --dry-run -m x -- docs/adr is blocked"\nEOF\nnode check.mjs`;
+  assert.equal(evaluate(hook(command, repo)), null);
+  assert.deepEqual(classify(command), { commits: false, pushes: false });
+});
+
+test('a quoted string that mentions a commit or push is not one', () => {
+  const repo = makeRepo('quoted-mention');
+  assert.equal(evaluate(hook('echo "run git commit -- docs/adr later"; grep -n \'git push\' README', repo)), null);
+});
+
+test('a commit inside an interpreter argument is still judged', () => {
+  const repo = makeRepo('interpreter');
+  assert.match(evaluate(hook('bash -c "git commit -m x -- docs/adr/one.md"', repo)), /local-only harness path/);
+  assert.match(evaluate(hook("eval 'git commit -m x -- NOTES.local.md'", repo)), /local-only harness path/);
+  assert.match(evaluate(hook('bash -lc "cd . && git commit -m x -- .claude/agents/a.md"', repo)), /local-only harness path/);
+});
+
+test('a commit whose message arrives through a heredoc is still judged on its arguments and secrets', () => {
+  const repo = makeRepo('heredoc-commit');
+  assert.match(evaluate(hook('git commit -F - -- docs/adr/one.md <<EOF\nfeat: x\nEOF', repo)), /local-only harness path/);
+  const token = `ghp_${'a'.repeat(36)}`;
+  const message = evaluate(hook(`git commit -F - -- src/a.ts <<EOF\ntoken ${token}\nEOF`, repo));
+  assert.match(message, /carries a GitHub token/);
+  assert.ok(!message.includes(token));
+});
+
+test('executableText keeps the command around the removed data', () => {
+  assert.equal(executableText('git commit -m "see docs/ later" -- src/a.ts'), 'git commit -m "" -- src/a.ts');
+  assert.equal(executableText("cat <<'EOF' > f\ngit push\nEOF\ngit status"), 'cat <<"" > f\ngit status');
+  assert.equal(executableText('x -c "git push"'), 'x -c "git push"');
+});
+
+test('a command directory with its own harness.json is governed by it, not by CLAUDE_PROJECT_DIR', () => {
+  const project = makeRepo('own-config-project', { branch: 'feature' });
+  const open = makeRepo('own-config-open-main', { config: { protectedBranches: [] }, branch: 'main' });
+  const allowed = runCliWithProject(JSON.stringify(hook(`git -C ${open} commit -m x`, project)), project);
+  assert.equal(allowed.status, 0);
+  assert.equal(allowed.stderr, '');
+  const strict = makeRepo('own-config-strict', { config: { protectedBranches: ['feature'] } });
+  const blocked = runCliWithProject(JSON.stringify(hook(`git -C ${strict} commit -m x`, project)), project);
+  assert.equal(blocked.status, 2);
+  assert.match(blocked.stderr, /is on feature/);
 });

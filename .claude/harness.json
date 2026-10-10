@@ -1,0 +1,9 @@
+{
+  "protectedBranches": [],
+  "localOnlyPaths": [
+    ".neutrality-denylist"
+  ],
+  "untrustedSources": [
+    "WebFetch"
+  ]
+}

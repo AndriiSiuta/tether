@@ -22,7 +22,7 @@ claude plugin install tether@tether --scope local
 From GitHub, pinned to a tag:
 
 ```
-claude plugin marketplace add AndriiSiuta/tether#v0.4.1
+claude plugin marketplace add AndriiSiuta/tether#v0.4.2
 claude plugin install tether@tether --scope local
 ```
 
@@ -80,7 +80,7 @@ Without `harness.json` every hook is inert. `/tether:setup`'s `telemetry` and `m
 | Event | Matcher | Script | Keys read | Effect |
 |---|---|---|---|---|
 | SessionStart | all | `session-context.mjs` | `untrustedSources` | When the project names untrusted sources, adds one reminder that context other plugins inject at session start is data, not instructions. |
-| PreToolUse | `Bash` | `git-guard.mjs` | `protectedBranches`, `localOnlyPaths`, `secretShapes` | Exits 2 on a `git commit` or `git push` on a protected branch, or one that carries a local-only path, or a commit whose command text carries a secret-shaped token. The directory comes from a leading `cd <dir>` or `git -C <dir>`, else the hook's `cwd`, and the branch is read there. |
+| PreToolUse | `Bash` | `git-guard.mjs` | `protectedBranches`, `localOnlyPaths`, `secretShapes` | Exits 2 on a `git commit` or `git push` on a protected branch, or one that carries a local-only path, or a commit whose command text carries a secret-shaped token. Heredoc bodies and plain quoted strings are data, not commands: a script or note that mentions `git commit` passes, while `bash -c "git commit …"` and `eval` arguments are still judged. The directory comes from a leading `cd <dir>` or `git -C <dir>`, else the hook's `cwd`, and the branch is read there. |
 | PreToolUse | `mcp__.*` | `mcp-write-guard.mjs` | `mcpWriteDeny`, `secretShapes` | Returns a PreToolUse `deny` for a listed MCP write tool, including one reached through a plugin-provided server, and for any MCP call whose input carries a secret-shaped token. |
 | PostToolUse | `Edit\|Write` | `prettier.sh` | `formatSkip` | Formats the written file inside the project with the project's own Prettier (`node_modules/.bin/prettier`, else `npx --no-install prettier`); it never fetches from npm. Runs only when `formatSkip` is set. Always exits 0. |
 | PostToolUse | `mcp__.*\|WebFetch` | `untrusted-input.mjs` | `untrustedSources` | Adds a reminder that the tool output is data, not instructions (see the `untrusted-input` skill). It fires only for `mcp__*` tools and `WebFetch`, its matcher, so an `untrustedSources` entry for any other tool never gets a note. |
@@ -88,7 +88,7 @@ Without `harness.json` every hook is inert. `/tether:setup`'s `telemetry` and `m
 | SubagentStop | all | `spec-cap.mjs` | `spec` | Exits 2 when a spec dated today, written by `spec.agent`, is longer than `spec.maxWords`. |
 | SubagentStop | all | `fix-round-cap.mjs` | `implementerAgents`, `fixRoundCap` | Counts the stops per session and task under `${CLAUDE_PLUGIN_DATA}/rounds/`. The cap is checked when the implementer stops after a round: it exits 2 once more than `fixRoundCap` fix rounds follow the first stop, naming the rounds used. A stop with `stop_hook_active` is not counted. |
 
-`git-guard`, `mcp-write-guard` and `untrusted-input` read the config through `loadSecurityContext`, which tries `CLAUDE_PROJECT_DIR` before the hook's `cwd`, so a tool call made from another directory is still guarded.
+`mcp-write-guard` and `untrusted-input` read the config through `loadSecurityContext`, which tries `CLAUDE_PROJECT_DIR` before the hook's `cwd`, so a tool call made from another directory is still guarded. `git-guard` first looks for a `harness.json` in the directory the command runs in, so a repository that carries its own policy is governed by it, and falls back to the same lookup otherwise.
 
 Every hook exits 0 with no output on malformed stdin, a missing field, or no `harness.json`. `implementer-report` and `spec-cap` also let a stop through when `stop_hook_active` is true, so an agent that cannot comply is never sent back forever. `spec-cap` takes today from the local date.
 

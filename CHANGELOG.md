@@ -4,6 +4,12 @@ All notable changes to the `tether` marketplace and its plugins. Versions follow
 
 ## Unreleased
 
+## v0.4.2
+
+### tether 0.4.2
+- `git-guard` judges only the executable text of a Bash command: heredoc bodies and plain quoted strings no longer make a command a commit or push, so a script or note that mentions `git commit` passes. Interpreter arguments (`bash -c`, `sh -lc`, `eval`, `xargs`, `ssh`) are still judged, a commit whose message arrives through a heredoc is still checked for local-only paths and secret shapes, and a quoted pathspec still blocks.
+- `git-guard` reads the `harness.json` of the repository the command runs in before the one under `CLAUDE_PROJECT_DIR`, so a repository with its own policy is governed by it. This repository carries one: no protected branch, the neutrality denylist local-only.
+
 ## v0.4.1
 
 ### tether 0.4.1
