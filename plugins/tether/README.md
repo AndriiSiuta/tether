@@ -22,7 +22,7 @@ claude plugin install tether@tether --scope local
 From GitHub, pinned to a tag:
 
 ```
-claude plugin marketplace add AndriiSiuta/tether#v0.4.0
+claude plugin marketplace add AndriiSiuta/tether#v0.4.1
 claude plugin install tether@tether --scope local
 ```
 
@@ -158,7 +158,7 @@ The stack is one `grafana/otel-lgtm:0.35.0` container, pinned by digest.
 - **Pulling:** the image is pulled only after explicit consent.
 - **Privacy:** telemetry stays on localhost and is kept 14 days. Prompt, response, tool-content and raw-body logging are all off.
 - **Tool details:** `setup --only telemetry` also sets `OTEL_LOG_TOOL_DETAILS=1`, so the Bash command text and the MCP tool names of every call are logged to the local Loki and kept for 14 days.
-- **Repository filter:** the dashboard's `Repository` variable splits the cost and token panels by the `vcs_repository_name` metric label (`OTEL_METRICS_INCLUDE_REPOSITORY=true`, set by the telemetry part, is what adds the `vcs_*` labels). Sessions that run outside a repository, such as a memory plugin's observer, have no label and drop out once a repository is picked. The dashboard file is bind-mounted into the container, so an edit shows up within the provisioning interval; `/tether:telemetry down` and `up` if it does not.
+- **Repository filter:** the dashboard's `Repository` variable splits the cost and token panels by the `vcs_repository_name` metric label (`OTEL_METRICS_INCLUDE_REPOSITORY=true`, set by the telemetry part, is what adds the `vcs_*` labels). Sessions that run outside a repository, such as a memory plugin's observer, have no label and drop out once a repository is picked. The dashboard file is bind-mounted into the container, but Grafana applied an edit only after a restart in practice, so run `/tether:telemetry down` and `up` after changing it.
 
 ## With a memory plugin
 
