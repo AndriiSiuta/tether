@@ -5,7 +5,7 @@ import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { denyNames, evaluate } from '../scripts/mcp-write-guard.mjs';
+import { denyNames, evaluate, secretInInput } from '../scripts/mcp-write-guard.mjs';
 
 const CLI = join(dirname(fileURLToPath(import.meta.url)), '..', 'scripts', 'mcp-write-guard.mjs');
 const CONFIG = {
@@ -161,4 +161,18 @@ test('malformed stdin or a missing field exits 0 silently', () => {
     assert.equal(result.status, 0);
     assert.equal(result.stdout + result.stderr, '');
   }
+});
+
+test('an MCP call whose input carries a secret-shaped token is denied without echoing it', () => {
+  const config = { mcpWriteDeny: [] };
+  const token = `sk-ant-${'x'.repeat(24)}`;
+  const input = { tool_name: 'mcp__tracker__create_comment', tool_input: { body: `see ${token}` } };
+  assert.equal(secretInInput(input, config), 'an Anthropic API key');
+  const output = evaluate(input, config);
+  assert.equal(output.hookSpecificOutput.permissionDecision, 'deny');
+  assert.match(output.hookSpecificOutput.permissionDecisionReason, /carries an Anthropic API key/);
+  assert.ok(!JSON.stringify(output).includes(token));
+  assert.equal(evaluate({ tool_name: 'mcp__tracker__create_comment', tool_input: { body: 'plain text' } }, config), null);
+  assert.equal(evaluate(input, { ...config, secretShapes: false }), null);
+  assert.equal(secretInInput({ tool_name: 'Bash', tool_input: { command: token } }, config), null);
 });

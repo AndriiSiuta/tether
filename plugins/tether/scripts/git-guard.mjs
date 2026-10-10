@@ -1,10 +1,12 @@
 // PreToolUse, matcher Bash: blocks a git commit or push on a protected branch or carrying a local-only path.
 // The branch is read in a leading `cd <dir>` or `git -C <dir>`, else the hook cwd; harness.json prefers CLAUDE_PROJECT_DIR.
+// A commit whose command text carries a secret-shaped token is blocked too, unless harness.json sets secretShapes to false.
 // Exit 2 with one stderr paragraph blocks; exit 0 otherwise, and on malformed stdin or no harness.json.
 import { execFileSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { escapeRegExp, loadSecurityContext, readStdinJson } from './lib/config.mjs';
+import { findSecretShape } from './lib/secrets.mjs';
 
 function git(dir, args) {
   return execFileSync('git', args, { cwd: dir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
@@ -49,6 +51,8 @@ export function findProblems({ command, dir, config }) {
   if (commits && pattern?.test(command.slice(command.search(/\bcommit\b/)))) {
     problems.push(`the commit names a local-only harness path (${localOnlyPaths.join(', ')})`);
   }
+  const secret = commits && config.secretShapes !== false ? findSecretShape(command) : null;
+  if (secret !== null) problems.push(`the commit text carries ${secret}; a credential never goes into a message`);
   if (pushes && branch !== '' && !onProtected && protectedBranches.length > 0 && localOnlyPaths.length > 0) {
     const upstream = `origin/${protectedBranches[0]}`;
     try {

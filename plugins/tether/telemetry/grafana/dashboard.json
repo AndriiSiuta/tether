@@ -61,7 +61,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (agent_name, model, type) (increase({__name__=~\"claude_code_token_usage(_tokens)?_total\"}[$__rate_interval]))",
+          "expr": "sum by (agent_name, model, type) (increase({__name__=~\"claude_code_token_usage(_tokens)?_total\", repository=~\"$repository\"}[$__rate_interval]))",
           "legendFormat": "{{agent_name}} {{model}} {{type}}",
           "range": true
         }
@@ -113,7 +113,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (agent_name, model) (increase({__name__=~\"claude_code_cost_usage(_USD)?_total\"}[$__rate_interval]))",
+          "expr": "sum by (agent_name, model) (increase({__name__=~\"claude_code_cost_usage(_USD)?_total\", repository=~\"$repository\"}[$__rate_interval]))",
           "legendFormat": "{{agent_name}} {{model}}",
           "range": true
         }
@@ -355,5 +355,38 @@
         }
       ]
     }
-  ]
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "repository",
+        "label": "Repository",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "query": {
+          "query": "label_values({__name__=~\"claude_code_cost_usage(_USD)?_total\"}, repository)",
+          "refId": "StandardVariableQuery"
+        },
+        "definition": "label_values({__name__=~\"claude_code_cost_usage(_USD)?_total\"}, repository)",
+        "includeAll": true,
+        "allValue": ".*",
+        "multi": true,
+        "refresh": 2,
+        "sort": 1,
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": []
+      }
+    ]
+  }
 }

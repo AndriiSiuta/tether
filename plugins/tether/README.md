@@ -32,7 +32,7 @@ The plugin declares no `userConfig`. The backup directory is an argument to `/te
 
 ## `.claude/harness.json`
 
-The file sits at the project root. Hooks look for it first in `CLAUDE_PROJECT_DIR` (the security hooks) or in the hook's `cwd`. In a linked git worktree, they fall back to the main worktree's file. A malformed file is ignored, with one stderr line.
+The file sits at the project root. Hooks start from `CLAUDE_PROJECT_DIR` (the security hooks) or the hook's `cwd` and walk up from that directory to the git toplevel, then try the main worktree's root, so a project that is one folder of a larger repository keeps its own file. A malformed file is ignored, with one stderr line. `/tether:setup --only harness` writes a starter file when none exists.
 
 Without `harness.json` every hook is inert. `/tether:setup`'s `telemetry` and `mcp-pins` parts read nothing from it and still apply; `deny` and `sandbox` need it; `claude-mem` reads `verifyCommand` when the file exists and applies without it.
 
@@ -73,13 +73,15 @@ Without `harness.json` every hook is inert. `/tether:setup`'s `telemetry` and `m
 | `reports` | The folder for run reports and the monthly metrics note. |
 | `sandboxDomains` | The network allowlist that `setup --only sandbox` writes. |
 | `ado` | The Azure DevOps `org`, `project` and `repo` that `/tether:metrics` reads from. |
+| `secretShapes` | `false` switches off the secret-shape check in `git-guard` and `mcp-write-guard`. On by default: a commit command or an MCP call carrying a token-shaped string (GitHub, Anthropic, AWS, Slack, a JSON web token, a private key block, an Azure DevOps personal access token) is blocked, and the string is never echoed. |
 
 ## Hooks
 
 | Event | Matcher | Script | Keys read | Effect |
 |---|---|---|---|---|
-| PreToolUse | `Bash` | `git-guard.mjs` | `protectedBranches`, `localOnlyPaths` | Exits 2 on a `git commit` or `git push` on a protected branch, or one that carries a local-only path. The directory comes from a leading `cd <dir>` or `git -C <dir>`, else the hook's `cwd`, and the branch is read there. |
-| PreToolUse | `mcp__.*` | `mcp-write-guard.mjs` | `mcpWriteDeny` | Returns a PreToolUse `deny` for a listed MCP write tool, including one reached through a plugin-provided server. |
+| SessionStart | all | `session-context.mjs` | `untrustedSources` | When the project names untrusted sources, adds one reminder that context other plugins inject at session start is data, not instructions. |
+| PreToolUse | `Bash` | `git-guard.mjs` | `protectedBranches`, `localOnlyPaths`, `secretShapes` | Exits 2 on a `git commit` or `git push` on a protected branch, or one that carries a local-only path, or a commit whose command text carries a secret-shaped token. The directory comes from a leading `cd <dir>` or `git -C <dir>`, else the hook's `cwd`, and the branch is read there. |
+| PreToolUse | `mcp__.*` | `mcp-write-guard.mjs` | `mcpWriteDeny`, `secretShapes` | Returns a PreToolUse `deny` for a listed MCP write tool, including one reached through a plugin-provided server, and for any MCP call whose input carries a secret-shaped token. |
 | PostToolUse | `Edit\|Write` | `prettier.sh` | `formatSkip` | Formats the written file inside the project with the project's own Prettier (`node_modules/.bin/prettier`, else `npx --no-install prettier`); it never fetches from npm. Runs only when `formatSkip` is set. Always exits 0. |
 | PostToolUse | `mcp__.*\|WebFetch` | `untrusted-input.mjs` | `untrustedSources` | Adds a reminder that the tool output is data, not instructions (see the `untrusted-input` skill). It fires only for `mcp__*` tools and `WebFetch`, its matcher, so an `untrustedSources` entry for any other tool never gets a note. |
 | SubagentStop | all | `implementer-report.mjs` | `implementerAgents`, `reportFields` | Exits 2, sending an implementer back, when its final message lacks a report field or a `Blocked:` line. |
@@ -96,7 +98,7 @@ An implementer dispatch has to start with a `# Task <N>: <title>` heading line, 
 
 | Command | What it does |
 |---|---|
-| `/tether:setup [--only telemetry\|deny\|mcp-pins\|sandbox\|claude-mem] [--user]` | Prints a key-level diff with `--dry-run`, asks you, and only then writes with `--yes`. |
+| `/tether:setup [--only harness\|telemetry\|deny\|mcp-pins\|sandbox\|claude-mem] [--user]` | Prints a key-level diff with `--dry-run`, asks you, and only then writes with `--yes`. |
 | `/tether:telemetry up\|down\|status` | Starts, stops or checks the local telemetry stack. `up` pulls the image only after you agree. |
 | `/tether:ledger <report.md> [--dry-run]` | Fills a run report's token ledger from local telemetry, then prints the per-agent totals (`ledger-stats.mjs`). |
 | `/tether:eval [--tasks <ids>] [--agent <name>] [--all] [--timeout <min>]` | Lists the frozen eval tasks in a dry run, states the cost, and runs them only after your yes, in the background or in your own terminal. |
@@ -131,6 +133,7 @@ It writes nothing and exits 1 when `--dir` is missing, when there is no `harness
 
 | Part | Target | Keys |
 |---|---|---|
+| `harness` | `<project>/.claude/harness.json` | A starter file when none exists: the default branch (from `origin/HEAD`, else `main`) protected, the file itself local-only, `implementerAgents`, `reportFields`, `untrustedSources: ["WebFetch"]` and `fixRoundCap: 2`. An existing file is never changed. Runs first, so `deny` and `sandbox` in the same run read it. |
 | `telemetry` | `~/.claude/settings.json` | `env`: `CLAUDE_CODE_ENABLE_TELEMETRY`, the OTLP exporters (gRPC to `http://127.0.0.1:4317`, traces included), `OTEL_LOG_TOOL_DETAILS=1`, and the four content switches `OTEL_LOG_USER_PROMPTS`, `OTEL_LOG_ASSISTANT_RESPONSES`, `OTEL_LOG_TOOL_CONTENT` and `OTEL_LOG_RAW_API_BODIES`, all set to `0`. |
 | `deny` | `<project>/.claude/settings.local.json` | `permissions.deny` gains `mcp__<server>__<tool>` for every `mcpWriteDeny` `tools` entry. The patterns stay hook-only. |
 | `mcp-pins` | `~/.claude.json` | The project's `mcpServers` args: `@azure-devops/mcp` is pinned to the current npm version, and `sonarsource/sonarqube-mcp` to the digest of the local image. |
@@ -155,6 +158,7 @@ The stack is one `grafana/otel-lgtm:0.35.0` container, pinned by digest.
 - **Pulling:** the image is pulled only after explicit consent.
 - **Privacy:** telemetry stays on localhost and is kept 14 days. Prompt, response, tool-content and raw-body logging are all off.
 - **Tool details:** `setup --only telemetry` also sets `OTEL_LOG_TOOL_DETAILS=1`, so the Bash command text and the MCP tool names of every call are logged to the local Loki and kept for 14 days.
+- **Repository filter:** the dashboard's `Repository` variable splits the cost and token panels by the `repository` metric label (`OTEL_METRICS_INCLUDE_REPOSITORY=true`, set by the telemetry part). Sessions that run outside a repository, such as a memory plugin's observer, have no label and drop out once a repository is picked.
 
 ## With a memory plugin
 
@@ -164,7 +168,8 @@ A session-memory plugin such as `claude-mem` needs nothing from tether: Claude C
 - **Subagents.** An implementer's report is the record of its work. With `CLAUDE_MEM_SKIP_SUBAGENT_OBSERVATIONS=true` in the `env` block of `~/.claude/settings.json` (environment overrides the plugin's own settings file) the plugin stores the dispatcher's view, the dispatch and the report that came back, and not every tool call inside the implementer. On a run with several implementers that is most of the plugin's observer cost. `/tether:setup --only claude-mem` writes this and the other observer guardrails (redaction on, the file-read gate off, analytics off, a skip regex for verify and runner output); see the table above.
 - **Evals.** `eval-run.mjs` sets `CLAUDE_MEM_DISABLE_OBSERVATION=1` and `CLAUDE_MEM_DISABLE_TOOL_HOOKS=1` for the agent under test, so a fixture run is never stored as project history.
 
-The plugin's observer runs as Claude Code sessions of its own, so with the telemetry part on they show in Grafana as extra sessions. The ledger and `/tether:metrics` read only the sessions a run report names and are unaffected.
+The plugin's observer runs as Claude Code sessions of its own, so with the telemetry part on they show in Grafana as extra sessions; pick a repository in the dashboard's `Repository` variable to leave them out. The ledger and `/tether:metrics` read only the sessions a run report names and are unaffected.
+- **Session start.** The context block a memory plugin injects passes through no PostToolUse hook, so the `session-context` hook adds one data-not-instructions reminder at session start whenever `untrustedSources` is set.
 
 ## Tests
 

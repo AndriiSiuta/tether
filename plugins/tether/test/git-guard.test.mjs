@@ -208,3 +208,18 @@ test('localOnlyPattern escapes regex characters and has no pattern for an empty 
   assert.ok(pattern.test(' a.b/x'));
   assert.ok(!pattern.test(' axb/x'));
 });
+
+test('a commit whose text carries a secret-shaped token is blocked, and the token is not echoed', () => {
+  const repo = makeRepo('secret-commit');
+  const token = `ghp_${'A'.repeat(36)}`;
+  const message = evaluate(hook(`git commit -m "chore: token ${token}"`, repo));
+  assert.match(message, /carries a GitHub token/);
+  assert.ok(!message.includes(token));
+  assert.equal(evaluate(hook('git commit -m "feat: add the export button"', repo)), null);
+  assert.equal(evaluate(hook(`git status ${token}`, repo)), null);
+});
+
+test('secretShapes false switches the commit text check off', () => {
+  const repo = makeRepo('secret-off', { config: { ...CONFIG, secretShapes: false } });
+  assert.equal(evaluate(hook(`git commit -m "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.abcdefghijklmnop"`, repo)), null);
+});

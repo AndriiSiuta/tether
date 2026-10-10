@@ -154,3 +154,14 @@ test('--get exits 1 for a missing key', () => {
   const repo = makeRepo('cli-missing', CONFIG);
   assert.equal(runCli(['--get', 'nope'], repo).status, 1);
 });
+
+test('a project directory inside a larger repo is checked before the git toplevel', () => {
+  const repo = makeRepo('nested', CONFIG);
+  const project = join(repo, 'apps', 'web');
+  writeConfig(project, { protectedBranches: ['develop'] });
+  mkdirSync(join(project, 'src', 'app'), { recursive: true });
+  mkdirSync(join(repo, 'apps', 'api'), { recursive: true });
+  assert.deepEqual(findConfig(project), { root: project, config: { protectedBranches: ['develop'] } });
+  assert.deepEqual(findConfig(join(project, 'src', 'app')), { root: project, config: { protectedBranches: ['develop'] } });
+  assert.deepEqual(findConfig(join(repo, 'apps', 'api')), { root: repo, config: CONFIG });
+});

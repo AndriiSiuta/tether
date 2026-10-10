@@ -36,7 +36,12 @@ function candidateRoots(dir) {
   if (toplevel === '') return [dir];
   const commonDir = git(dir, ['rev-parse', '--path-format=absolute', '--git-common-dir']);
   const mainRoot = commonDir === '' ? toplevel : dirname(commonDir);
-  return mainRoot === toplevel ? [toplevel] : [toplevel, mainRoot];
+  const ancestors = [];
+  for (let current = dir; current.startsWith(toplevel); current = dirname(current)) {
+    ancestors.push(current);
+    if (current === toplevel || current === dirname(current)) break;
+  }
+  return [...new Set([...ancestors, toplevel, mainRoot])];
 }
 
 export function findConfig(dir) {

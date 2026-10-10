@@ -5,7 +5,7 @@ import { chmodSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync,
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { MEMORY_ENV, MEMORY_SKIP_BASH_DEFAULT, TELEMETRY_ENV, backupPath, diffKeys, main, stamp, verifyPattern } from '../scripts/setup.mjs';
+import { MEMORY_ENV, MEMORY_SKIP_BASH_DEFAULT, TELEMETRY_ENV, backupPath, diffKeys, harnessTemplate, main, stamp, verifyPattern } from '../scripts/setup.mjs';
 
 const CLI = join(dirname(fileURLToPath(import.meta.url)), '..', 'scripts', 'setup.mjs');
 const CONFIG = {
@@ -48,7 +48,7 @@ async function setup(args, { home, project }, deps = {}) {
     stderr: { write: (s) => (err += s) },
     isTTY: false,
     now: () => NOW,
-    probes: { npmVersion: () => '2.3.0', imageDigest: () => 'sha256:abc123' },
+    probes: { defaultBranch: () => 'develop', npmVersion: () => '2.3.0', imageDigest: () => 'sha256:abc123' },
     ...deps,
   });
   return { code, out, err };
@@ -331,6 +331,31 @@ test('verifyPattern escapes the first non-runner token and gives up on flags or 
   assert.equal(verifyPattern('{base}'), undefined);
   assert.equal(verifyPattern(undefined), undefined);
   assert.equal(verifyPattern(''), undefined);
+});
+
+test('harness writes the starter file from the default branch and never touches an existing one', async () => {
+  const dirs = fresh({ config: null });
+  const result = await setup(['--only', 'harness', '--yes'], dirs);
+  assert.equal(result.code, 0);
+  assert.match(result.out, /harness: .*harness\.json \(new file\)/);
+  assert.match(result.out, /\+ protectedBranches \(\+1\)/);
+  const written = readJson(join(dirs.project, '.claude', 'harness.json'));
+  assert.deepEqual(written, harnessTemplate('develop'));
+  assert.deepEqual(written.protectedBranches, ['develop']);
+  const again = await setup(['--only', 'harness', '--yes'], dirs);
+  assert.match(again.out, /harness: exists; edit it by hand/);
+  assert.match(again.out, /harness: no changes/);
+  assert.deepEqual(readJson(join(dirs.project, '.claude', 'harness.json')), written);
+});
+
+test('a full run writes harness first, so deny and sandbox see the new config', async () => {
+  const dirs = fresh({ config: null });
+  const result = await setup(['--yes'], dirs);
+  assert.equal(result.code, 0);
+  assert.match(result.out, /harness: .*\(new file\)/);
+  assert.doesNotMatch(result.out, /no \.claude\/harness\.json/);
+  assert.match(result.out, /deny: no changes/);
+  assert.match(result.out, /sandbox: .*settings\.local\.json/);
 });
 
 test('stamp formats local time as YYYYMMDD-HHmm', () => {

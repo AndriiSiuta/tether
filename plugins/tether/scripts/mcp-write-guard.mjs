@@ -1,9 +1,11 @@
 // PreToolUse, matcher mcp__.*: denies an MCP tool listed in harness.json mcpWriteDeny by name or pattern.
 // A server matches, case-insensitively and with non-alphanumeric runs as `_`, as `<server>` or as `..._<server>`.
+// Any MCP call whose input carries a secret-shaped token is denied as well, unless harness.json sets secretShapes to false.
 // Prints a PreToolUse deny and exits 0; exits 0 silently otherwise, and on malformed stdin or no harness.json.
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { loadSecurityContext, readStdinJson } from './lib/config.mjs';
+import { findSecretShape } from './lib/secrets.mjs';
 
 export function denyNames(config) {
   return (config?.mcpWriteDeny ?? []).flatMap((rule) => (rule.tools ?? []).map((tool) => `mcp__${rule.server}__${tool}`));
@@ -44,18 +46,25 @@ export function findMatch(toolName, config) {
   return null;
 }
 
+function deny(reason) {
+  return { hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny', permissionDecisionReason: reason } };
+}
+
+export function secretInInput(input, config) {
+  if (config?.secretShapes === false || !/^mcp__/.test(String(input?.tool_name))) return null;
+  return findSecretShape(JSON.stringify(input?.tool_input ?? {}));
+}
+
 export function evaluate(input, config) {
   const toolName = input?.tool_name;
   if (typeof toolName !== 'string') return null;
   const match = findMatch(toolName, config);
-  if (match === null) return null;
-  return {
-    hookSpecificOutput: {
-      hookEventName: 'PreToolUse',
-      permissionDecision: 'deny',
-      permissionDecisionReason: `tether: ${toolName} is an MCP write (server ${match.server}, matched ${match.matched}); the deny list is in .claude/harness.json.`,
-    },
-  };
+  if (match !== null) {
+    return deny(`tether: ${toolName} is an MCP write (server ${match.server}, matched ${match.matched}); the deny list is in .claude/harness.json.`);
+  }
+  const secret = secretInInput(input, config);
+  if (secret !== null) return deny(`tether: the ${toolName} call carries ${secret}; a credential never leaves through an MCP tool.`);
+  return null;
 }
 
 async function main() {

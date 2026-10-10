@@ -1,4 +1,4 @@
-// CLI: node setup.mjs [--only telemetry|deny|mcp-pins|sandbox|claude-mem] [--user] [--dry-run] [--yes] [--project <dir>]
+// CLI: node setup.mjs [--only harness|telemetry|deny|mcp-pins|sandbox|claude-mem] [--user] [--dry-run] [--yes] [--project <dir>]
 // Prints a key-level diff per part, then backs up, writes atomically and re-reads the target on confirmation.
 // Exit 0 done or unchanged, 1 on a malformed target or bad arguments, 3 once after every diff when a change needs --yes without a TTY.
 import { execFileSync } from 'node:child_process';
@@ -9,7 +9,25 @@ import { createInterface } from 'node:readline/promises';
 import { pathToFileURL } from 'node:url';
 import { escapeRegExp, findConfig } from './lib/config.mjs';
 
-export const PARTS = ['telemetry', 'deny', 'mcp-pins', 'sandbox', 'claude-mem'];
+export const PARTS = ['harness', 'telemetry', 'deny', 'mcp-pins', 'sandbox', 'claude-mem'];
+
+// The starter .claude/harness.json: the default branch protected, the file itself local-only, and the report and
+// fix-round defaults every hook understands. Written only when the project has no harness.json yet.
+export function harnessTemplate(defaultBranch) {
+  return {
+    protectedBranches: [defaultBranch],
+    localOnlyPaths: ['.claude/harness.json'],
+    implementerAgents: ['implementer'],
+    reportFields: ['Files:', 'Checks:', 'Deferred:', 'Plan edits:|Blocked:'],
+    untrustedSources: ['WebFetch'],
+    fixRoundCap: 2,
+  };
+}
+
+export function planHarness(existing, template) {
+  if (Object.keys(existing).length > 0) return { next: existing, notes: ['exists; edit it by hand'] };
+  return { next: template, notes: [] };
+}
 
 export const TELEMETRY_ENV = {
   CLAUDE_CODE_ENABLE_TELEMETRY: '1',
@@ -130,6 +148,7 @@ export function planMemory(settings, config) {
 export function planDeny(settings, names) {
   const next = clone(settings);
   const permissions = isObject(next.permissions) ? next.permissions : {};
+  if (names.length === 0 && !Array.isArray(permissions.deny)) return { next, notes: [] };
   next.permissions = { ...permissions, deny: union(permissions.deny, names) };
   return { next, notes: [] };
 }
@@ -188,6 +207,7 @@ function run(command, args) {
 }
 
 export const defaultProbes = {
+  defaultBranch: (dir) => run('git', ['-C', dir, 'symbolic-ref', '--short', 'refs/remotes/origin/HEAD']).replace(/^origin\//, '') || 'main',
   npmVersion: (pkg) => run('npm', ['view', pkg, 'version']) || undefined,
   imageDigest: (ref) => {
     const repoDigest = run('docker', ['image', 'inspect', '--format', '{{index .RepoDigests 0}}', ref]);
@@ -258,6 +278,8 @@ export function parseArgs(argv) {
 
 function targetFor(part, ctx) {
   switch (part) {
+    case 'harness':
+      return join(ctx.projectPath, '.claude', 'harness.json');
     case 'telemetry':
       return join(ctx.home, '.claude', 'settings.json');
     case 'deny':
@@ -275,6 +297,8 @@ function targetFor(part, ctx) {
 
 async function planPart(part, data, ctx) {
   switch (part) {
+    case 'harness':
+      return planHarness(data, harnessTemplate(ctx.probes.defaultBranch(ctx.projectPath)));
     case 'telemetry':
       return planTelemetry(data);
     case 'deny': {
@@ -330,6 +354,7 @@ async function runPart(part, ctx) {
   mkdirSync(dirname(file), { recursive: true });
   writeAtomic(file, `${JSON.stringify(next, null, 2)}\n`);
   const reread = readTarget(file).data;
+  if (part === 'harness') ctx.config = findConfig(ctx.projectPath)?.config ?? null;
   const settled = diffKeys(next, reread).length === 0 && diffKeys(reread, next).length === 0;
   out(`${part}: ${settled ? 'wrote' : 'wrote, but the re-read differs:'} ${file}${backup ? ` (backup ${backup})` : ''}`);
   return settled ? 0 : 1;
