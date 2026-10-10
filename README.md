@@ -42,6 +42,8 @@ Estimates from `claude plugin details`; the real figure depends on the Claude Co
 
 Issues and pull requests are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md). Changes are listed in [CHANGELOG.md](CHANGELOG.md).
 
+Two short articles explain the why: [A harness for Claude Code](docs/articles/a-harness-for-claude-code.md) (memory, guard rails and the score) and [Telemetry and evals](docs/articles/telemetry-and-evals.md) (how we know it works).
+
 ## Security
 
 Report a vulnerability privately, as [SECURITY.md](SECURITY.md) describes. [docs/threat-model.md](docs/threat-model.md) lists the inputs the plugins guard against, the hook or command that covers each, and the residual risks.
