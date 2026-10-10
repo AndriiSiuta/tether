@@ -2,7 +2,7 @@
 
 A Claude Code plugin of agents and skills for Angular and Nx workspaces: one app, per-domain libraries under `libs/<scope>/<name>`, route-scoped providers, and signals over RxJS. The plugin ships Markdown only, with no hooks and no scripts.
 
-> **Status: 0.2.0, early.** The rules and agents are extracted from a production Angular/Nx workspace, but the plugin agents have not yet been verified on other repositories. Rule ids are stable; wording may change. Please open an issue when an agent or rule does not fit your workspace.
+> **Status: 0.2.1, early.** The rules and agents are extracted from a production Angular/Nx workspace, but the plugin agents have not yet been verified on other repositories. Rule ids are stable; wording may change. Please open an issue when an agent or rule does not fit your workspace.
 
 ## What it is
 
@@ -26,7 +26,7 @@ claude plugin install tether-nx@tether --scope local
 From GitHub, pinned to a tag:
 
 ```
-claude plugin marketplace add AndriiSiuta/tether#v0.3.0
+claude plugin marketplace add AndriiSiuta/tether#v0.4.0
 claude plugin install tether-nx@tether --scope local
 ```
 
@@ -137,7 +137,7 @@ Five cases under [`evals/`](evals/), in Claude Code's `claude plugin eval` forma
 | `reviewer-flags-root-domain-service` | `Mode: conventions` marks `DI-2` fail for a data-access service with `providedIn: 'root'`. |
 | `reviewer-flags-feature-import` | `Mode: conventions` marks `FEAT-3` fail for a feature library that imports another feature library. |
 | `reviewer-without-mode-is-blocked` | A dispatch with no mode line gets `Blocked: name the mode` and no table. |
-| `planner-task-headings` | The plan's tasks are headed `### Task <N>: [tag] <title>`, one tag each, at most 12. Needs `--allow-tools Write`. |
+| `planner-task-headings` | The plan's tasks are headed `### Task <N>: [tag] <title>`, one tag each, at most 12. Needs `--allow-tools Write --scaffold`: its `scaffold.sh` copies the fixture into the run's working directory, because the runner grants reads on `add_dirs` but never tells the agent the path. |
 | `implementer-blocks-on-open-placement` | A brief that leaves placement open gets a `Blocked:` report and no written file. One `llm` grader. |
 
 Every run is a real model call on your account. From the repository root, a cheap single pass with no baseline arm:
@@ -146,7 +146,7 @@ Every run is a real model call on your account. From the repository root, a chea
 claude plugin eval plugins/tether-nx --ablation none --runs 1 --no-publish
 ```
 
-Add `--tag smoke` for the four read-only cases, `--case <name>` for one case, and `--allow-tools Write` for the planner case. Drop `--ablation none --runs 1` for the default three runs with and without the plugin, which reports what the plugin adds. Results go to `evals/results/`, which is git-ignored. The first run asks you to trust the directory.
+Add `--tag smoke` for the four read-only cases, `--case <name>` for one case, and `--allow-tools Write --scaffold` for the planner case. The four smoke cases carry the change inline in the brief and need no fixture read; a case whose agent must read files stages them with a `scaffold_script`, since an `add_dirs` folder is readable but unannounced. Drop `--ablation none --runs 1` for the default three runs with and without the plugin, which reports what the plugin adds. Results go to `evals/results/`, which is git-ignored. The first run asks you to trust the directory.
 
 ## Tests
 
