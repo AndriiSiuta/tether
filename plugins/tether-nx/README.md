@@ -146,7 +146,7 @@ Every run is a real model call on your account. From the repository root, a chea
 claude plugin eval plugins/tether-nx --ablation none --runs 1 --no-publish
 ```
 
-Add `--tag smoke` for the four read-only cases, `--case <name>` for one case, and `--allow-tools Write --scaffold` for the planner case. The four smoke cases carry the change inline in the brief and need no fixture read; a case whose agent must read files stages them with a `scaffold_script`, since an `add_dirs` folder is readable but unannounced. Drop `--ablation none --runs 1` for the default three runs with and without the plugin, which reports what the plugin adds. Results go to `evals/results/`, which is git-ignored. The first run asks you to trust the directory.
+Add `--tag smoke` for the four read-only cases, `--case <name>` for one case, `--scaffold` for the planner and implementer cases, and `--allow-tools Write` for the planner. The three reviewer cases carry the change inline in the brief and need no fixture read; the planner and implementer cases stage their fixture with a `scaffold_script`, since an `add_dirs` folder is readable but unannounced, so run them with `--scaffold`. Drop `--ablation none --runs 1` for the default three runs with and without the plugin, which reports what the plugin adds. Results go to `evals/results/`, which is git-ignored. The first run asks you to trust the directory.
 
 ## Tests
 

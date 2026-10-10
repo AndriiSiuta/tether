@@ -4,6 +4,12 @@ All notable changes to the `tether` marketplace and its plugins. Versions follow
 
 ## Unreleased
 
+### tether
+- The dashboard `Repository` variable reads the `vcs_repository_name` label the metrics carry; `repository` matched nothing.
+
+### tether-nx
+- The `implementer-blocks-on-open-placement` eval case stages its fixture with `scaffold.sh` like the planner case, so its pass is for the right reason (3 of 3 with the codebase visible).
+
 ## v0.4.0
 
 ### tether 0.4.0
