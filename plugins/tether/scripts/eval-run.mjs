@@ -130,9 +130,12 @@ export function runAsync(cmd, args, { cwd, input, env = process.env, timeoutMs }
   });
 }
 
+// A memory plugin would store the fixture run as project history and feed it back to later sessions.
+export const EVAL_CHILD_ENV = { CLAUDE_MEM_DISABLE_OBSERVATION: '1', CLAUDE_MEM_DISABLE_TOOL_HOOKS: '1' };
+
 export function childEnv(env = process.env) {
   const { CLAUDE_PROJECT_DIR, ...rest } = env;
-  return rest;
+  return { ...rest, ...EVAL_CHILD_ENV };
 }
 
 function removeWorktree(root, worktree) {

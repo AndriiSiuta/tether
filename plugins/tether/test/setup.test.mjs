@@ -5,7 +5,7 @@ import { chmodSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync,
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { TELEMETRY_ENV, backupPath, diffKeys, main, stamp } from '../scripts/setup.mjs';
+import { MEMORY_ENV, MEMORY_SKIP_BASH_DEFAULT, TELEMETRY_ENV, backupPath, diffKeys, main, stamp, verifyPattern } from '../scripts/setup.mjs';
 
 const CLI = join(dirname(fileURLToPath(import.meta.url)), '..', 'scripts', 'setup.mjs');
 const CONFIG = {
@@ -267,6 +267,70 @@ test('deny and sandbox are skipped for a project without harness.json', async ()
   assert.equal(result.code, 0);
   assert.match(result.out, /deny: no \.claude\/harness\.json/);
   assert.ok(!existsSync(localSettings(dirs.project)));
+});
+
+test('claude-mem writes the observer guardrails to user env, with the verify script in the skip regex', async () => {
+  const dirs = fresh({ config: { ...CONFIG, verifyCommand: 'node tools/verify.mjs --base {base}' } });
+  writeJson(userSettings(dirs.home), { ...KEPT, env: { OTHER: SECRET } });
+  const result = await setup(['--only', 'claude-mem', '--yes'], dirs);
+  assert.equal(result.code, 0);
+  assert.match(result.out, /\+ env\.CLAUDE_MEM_SKIP_SUBAGENT_OBSERVATIONS/);
+  assert.match(result.out, /\+ env\.CLAUDE_MEM_SKIP_BASH_PATTERNS/);
+  assert.ok(!result.out.includes(SECRET));
+  const written = readJson(userSettings(dirs.home));
+  assert.deepEqual(written.env, { OTHER: SECRET, ...MEMORY_ENV, CLAUDE_MEM_SKIP_BASH_PATTERNS: `tools\\/verify\\.mjs|${MEMORY_SKIP_BASH_DEFAULT}` });
+  const skip = new RegExp(written.env.CLAUDE_MEM_SKIP_BASH_PATTERNS);
+  assert.ok(skip.test('node tools/verify.mjs --base abc123 --projects x'));
+  assert.ok(skip.test('npx nx run-many -t lint test -p a,b'));
+  assert.ok(!skip.test('git status --short'));
+  assert.deepEqual(written.enabledPlugins, KEPT.enabledPlugins);
+  const second = await setup(['--only', 'claude-mem', '--yes'], dirs);
+  assert.match(second.out, /claude-mem: no changes/);
+});
+
+test('claude-mem keeps a hand-set skip regex and only adds a missing verify script', async () => {
+  const dirs = fresh({ config: { ...CONFIG, verifyCommand: 'node tools/verify.mjs --base {base}' } });
+  writeJson(userSettings(dirs.home), { env: { CLAUDE_MEM_SKIP_BASH_PATTERNS: 'mine|tools\\/verify\\.mjs', CLAUDE_MEM_TELEMETRY: '1' } });
+  const result = await setup(['--only', 'claude-mem', '--yes'], dirs);
+  assert.equal(result.code, 0);
+  assert.match(result.out, /CLAUDE_MEM_SKIP_BASH_PATTERNS kept as set/);
+  assert.match(result.out, /~ env\.CLAUDE_MEM_TELEMETRY/);
+  const written = readJson(userSettings(dirs.home)).env;
+  assert.equal(written.CLAUDE_MEM_SKIP_BASH_PATTERNS, 'mine|tools\\/verify\\.mjs');
+  assert.equal(written.CLAUDE_MEM_TELEMETRY, '0');
+  const other = fresh({ config: { ...CONFIG, verifyCommand: 'npm run verify -- --base {base}' } });
+  writeJson(userSettings(other.home), { env: { CLAUDE_MEM_SKIP_BASH_PATTERNS: 'mine' } });
+  await setup(['--only', 'claude-mem', '--yes'], other);
+  assert.equal(readJson(userSettings(other.home)).env.CLAUDE_MEM_SKIP_BASH_PATTERNS, 'verify|mine');
+});
+
+test('claude-mem without harness.json writes the default skip regex', async () => {
+  const dirs = fresh({ config: null });
+  const result = await setup(['--only', 'claude-mem', '--yes'], dirs);
+  assert.equal(result.code, 0);
+  assert.equal(readJson(userSettings(dirs.home)).env.CLAUDE_MEM_SKIP_BASH_PATTERNS, MEMORY_SKIP_BASH_DEFAULT);
+});
+
+test('a full run skips claude-mem unless the plugin is enabled in the target', async () => {
+  const dirs = fresh();
+  const result = await setup(['--dry-run'], dirs);
+  assert.match(result.out, /claude-mem: plugin not enabled in .*settings\.json; skipped/);
+  assert.doesNotMatch(result.out, /\+ env\.CLAUDE_MEM/);
+  writeJson(userSettings(dirs.home), { enabledPlugins: { 'claude-mem@thedotmack': true } });
+  const enabled = await setup(['--dry-run'], dirs);
+  assert.match(enabled.out, /\+ env\.CLAUDE_MEM_REDACT_ENABLED/);
+  writeJson(userSettings(dirs.home), { enabledPlugins: { 'claude-mem@thedotmack': false } });
+  assert.match((await setup(['--dry-run'], dirs)).out, /claude-mem: plugin not enabled/);
+});
+
+test('verifyPattern escapes the first non-runner token and gives up on flags or placeholders', () => {
+  assert.equal(verifyPattern('node .claude/tools/verify.mjs --base {base}'), '\\.claude\\/tools\\/verify\\.mjs');
+  assert.equal(verifyPattern('npx -y verify --base {base}'), 'verify');
+  assert.equal(verifyPattern('  bun run check.ts'), 'check\\.ts');
+  assert.equal(verifyPattern('--base {base}'), undefined);
+  assert.equal(verifyPattern('{base}'), undefined);
+  assert.equal(verifyPattern(undefined), undefined);
+  assert.equal(verifyPattern(''), undefined);
 });
 
 test('stamp formats local time as YYYYMMDD-HHmm', () => {

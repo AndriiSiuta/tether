@@ -34,7 +34,7 @@ The plugin declares no `userConfig`. The backup directory is an argument to `/te
 
 The file sits at the project root. Hooks look for it first in `CLAUDE_PROJECT_DIR` (the security hooks) or in the hook's `cwd`. In a linked git worktree, they fall back to the main worktree's file. A malformed file is ignored, with one stderr line.
 
-Without `harness.json` every hook is inert. `/tether:setup`'s `telemetry` and `mcp-pins` parts read nothing from it and still apply; `deny` and `sandbox` need it.
+Without `harness.json` every hook is inert. `/tether:setup`'s `telemetry` and `mcp-pins` parts read nothing from it and still apply; `deny` and `sandbox` need it; `claude-mem` reads `verifyCommand` when the file exists and applies without it.
 
 ```json
 {
@@ -96,7 +96,7 @@ An implementer dispatch has to start with a `# Task <N>: <title>` heading line, 
 
 | Command | What it does |
 |---|---|
-| `/tether:setup [--only telemetry\|deny\|mcp-pins\|sandbox] [--user]` | Prints a key-level diff with `--dry-run`, asks you, and only then writes with `--yes`. |
+| `/tether:setup [--only telemetry\|deny\|mcp-pins\|sandbox\|claude-mem] [--user]` | Prints a key-level diff with `--dry-run`, asks you, and only then writes with `--yes`. |
 | `/tether:telemetry up\|down\|status` | Starts, stops or checks the local telemetry stack. `up` pulls the image only after you agree. |
 | `/tether:ledger <report.md> [--dry-run]` | Fills a run report's token ledger from local telemetry, then prints the per-agent totals (`ledger-stats.mjs`). |
 | `/tether:eval [--tasks <ids>] [--agent <name>] [--all] [--timeout <min>]` | Lists the frozen eval tasks in a dry run, states the cost, and runs them only after your yes, in the background or in your own terminal. |
@@ -135,6 +135,7 @@ It writes nothing and exits 1 when `--dir` is missing, when there is no `harness
 | `deny` | `<project>/.claude/settings.local.json` | `permissions.deny` gains `mcp__<server>__<tool>` for every `mcpWriteDeny` `tools` entry. The patterns stay hook-only. |
 | `mcp-pins` | `~/.claude.json` | The project's `mcpServers` args: `@azure-devops/mcp` is pinned to the current npm version, and `sonarsource/sonarqube-mcp` to the digest of the local image. |
 | `sandbox` | `<project>/.claude/settings.local.json`, or `~/.claude/settings.json` with `--user` | `sandbox.enabled: true` and `sandbox.network.allowedDomains` from `sandboxDomains`. |
+| `claude-mem` | `~/.claude/settings.json` | `env`: `CLAUDE_MEM_SKIP_SUBAGENT_OBSERVATIONS=true`, `CLAUDE_MEM_REDACT_ENABLED=true`, `CLAUDE_MEM_FILE_READ_GATE_ENABLED=false`, `CLAUDE_MEM_TELEMETRY=0`, and `CLAUDE_MEM_SKIP_BASH_PATTERNS`: one regex of the `verifyCommand` script plus the test, lint, build and serve runners, so their long output is never observed. A value already set is kept, gaining only a missing verify script. In a full run this part is skipped unless the target's `enabledPlugins` has a `claude-mem@…` entry switched on; `--only claude-mem` writes regardless. |
 
 How setup writes:
 
@@ -154,6 +155,16 @@ The stack is one `grafana/otel-lgtm:0.35.0` container, pinned by digest.
 - **Pulling:** the image is pulled only after explicit consent.
 - **Privacy:** telemetry stays on localhost and is kept 14 days. Prompt, response, tool-content and raw-body logging are all off.
 - **Tool details:** `setup --only telemetry` also sets `OTEL_LOG_TOOL_DETAILS=1`, so the Bash command text and the MCP tool names of every call are logged to the local Loki and kept for 14 days.
+
+## With a memory plugin
+
+A session-memory plugin such as `claude-mem` needs nothing from tether: Claude Code merges plugin hooks, so its SessionStart, PostToolUse and Stop hooks run beside tether's guards. Three points matter when both are installed.
+
+- **Its search results are data.** The plugin's search tools (`mcp__plugin_claude-mem_mcp-search__*`) return text compressed from earlier tool output, including ticket, PR and web text an earlier session read, with the source gone. Add that prefix to `untrustedSources` so the reminder fires on them. The context block the plugin injects at session start passes through no hook; the `tether:untrusted-input` skill is what covers it.
+- **Subagents.** An implementer's report is the record of its work. With `CLAUDE_MEM_SKIP_SUBAGENT_OBSERVATIONS=true` in the `env` block of `~/.claude/settings.json` (environment overrides the plugin's own settings file) the plugin stores the dispatcher's view, the dispatch and the report that came back, and not every tool call inside the implementer. On a run with several implementers that is most of the plugin's observer cost. `/tether:setup --only claude-mem` writes this and the other observer guardrails (redaction on, the file-read gate off, analytics off, a skip regex for verify and runner output); see the table above.
+- **Evals.** `eval-run.mjs` sets `CLAUDE_MEM_DISABLE_OBSERVATION=1` and `CLAUDE_MEM_DISABLE_TOOL_HOOKS=1` for the agent under test, so a fixture run is never stored as project history.
+
+The plugin's observer runs as Claude Code sessions of its own, so with the telemetry part on they show in Grafana as extra sessions. The ledger and `/tether:metrics` read only the sessions a run report names and are unaffected.
 
 ## Tests
 

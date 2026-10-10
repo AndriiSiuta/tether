@@ -1,7 +1,7 @@
 ---
 disable-model-invocation: true
-description: Write the settings a plugin cannot set (telemetry env, MCP write deny list, MCP pins, sandbox), after the user reads the diff
-argument-hint: "[--only telemetry|deny|mcp-pins|sandbox] [--user]"
+description: Write the settings a plugin cannot set (telemetry env, MCP write deny list, MCP pins, sandbox, claude-mem observer env), after the user reads the diff
+argument-hint: "[--only telemetry|deny|mcp-pins|sandbox|claude-mem] [--user]"
 arguments: options
 ---
 

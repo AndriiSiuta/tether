@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { setTimeout as delay } from 'node:timers/promises';
-import { copyExcludes, costOf, parseResults, prepareWorktree, selectTasks, validateTask } from '../scripts/eval-run.mjs';
+import { childEnv, copyExcludes, costOf, parseResults, prepareWorktree, selectTasks, validateTask } from '../scripts/eval-run.mjs';
 
 const PLUGIN = join(dirname(fileURLToPath(import.meta.url)), '..');
 const CLI = join(PLUGIN, 'scripts', 'eval-run.mjs');
@@ -308,4 +308,12 @@ test('prepareWorktree leaves the eval tasks, results and copyExclude paths out o
   for (const path of ['private/evals/tasks', 'private/evals/results', 'private/secret', 'top-secret']) {
     assert.equal(existsSync(join(worktree, path)), false, path);
   }
+});
+
+test('childEnv drops CLAUDE_PROJECT_DIR and switches memory capture off for the agent under test', () => {
+  const env = childEnv({ CLAUDE_PROJECT_DIR: '/elsewhere', PATH: '/bin' });
+  assert.equal(env.CLAUDE_PROJECT_DIR, undefined);
+  assert.equal(env.PATH, '/bin');
+  assert.equal(env.CLAUDE_MEM_DISABLE_OBSERVATION, '1');
+  assert.equal(env.CLAUDE_MEM_DISABLE_TOOL_HOOKS, '1');
 });

@@ -1,4 +1,4 @@
-// CLI: node setup.mjs [--only telemetry|deny|mcp-pins|sandbox] [--user] [--dry-run] [--yes] [--project <dir>]
+// CLI: node setup.mjs [--only telemetry|deny|mcp-pins|sandbox|claude-mem] [--user] [--dry-run] [--yes] [--project <dir>]
 // Prints a key-level diff per part, then backs up, writes atomically and re-reads the target on confirmation.
 // Exit 0 done or unchanged, 1 on a malformed target or bad arguments, 3 once after every diff when a change needs --yes without a TTY.
 import { execFileSync } from 'node:child_process';
@@ -7,9 +7,9 @@ import { chmodSync, copyFileSync, constants, existsSync, mkdirSync, readFileSync
 import { basename, dirname, join, resolve } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { pathToFileURL } from 'node:url';
-import { findConfig } from './lib/config.mjs';
+import { escapeRegExp, findConfig } from './lib/config.mjs';
 
-export const PARTS = ['telemetry', 'deny', 'mcp-pins', 'sandbox'];
+export const PARTS = ['telemetry', 'deny', 'mcp-pins', 'sandbox', 'claude-mem'];
 
 export const TELEMETRY_ENV = {
   CLAUDE_CODE_ENABLE_TELEMETRY: '1',
@@ -26,6 +26,19 @@ export const TELEMETRY_ENV = {
   OTEL_LOG_TOOL_CONTENT: '0',
   OTEL_LOG_RAW_API_BODIES: '0',
 };
+
+// Guardrails for the claude-mem memory plugin's observer: no subagent capture, secrets redacted before storage,
+// no cancelled Reads, no analytics. Environment wins over the plugin's own settings file.
+export const MEMORY_ENV = {
+  CLAUDE_MEM_SKIP_SUBAGENT_OBSERVATIONS: 'true',
+  CLAUDE_MEM_REDACT_ENABLED: 'true',
+  CLAUDE_MEM_FILE_READ_GATE_ENABLED: 'false',
+  CLAUDE_MEM_TELEMETRY: '0',
+};
+// One regex (the plugin compiles the whole value) for Bash commands whose output is long and worth no observation.
+export const MEMORY_SKIP_BASH_DEFAULT = 'nx\\s+(run-many|run|test|lint|build|serve|affected|format)|npm (run )?test|npx jest|vitest';
+const MEMORY_PLUGIN = /^claude-mem@/;
+const RUNNERS = new Set(['node', 'npx', 'npm', 'bun', 'bunx', 'pnpm', 'yarn', 'run', 'exec', '-y', '--yes']);
 
 const ADO_PACKAGE = '@azure-devops/mcp';
 const ADO_UNPINNED = /^@azure-devops\/mcp(@latest)?$/;
@@ -88,6 +101,30 @@ export function planTelemetry(settings) {
   const next = clone(settings);
   next.env = { ...(isObject(next.env) ? next.env : {}), ...TELEMETRY_ENV };
   return { next, notes: [] };
+}
+
+// The verify command's script, as a regex alternative: `node tools/verify.mjs --base {base}` gives `tools\/verify\.mjs`.
+export function verifyPattern(command) {
+  if (typeof command !== 'string') return undefined;
+  const token = command.trim().split(/\s+/).find((word) => word !== '' && !RUNNERS.has(word));
+  return token === undefined || token.startsWith('-') || token.startsWith('{') ? undefined : escapeRegExp(token);
+}
+
+export function memoryEnabled(settings) {
+  const plugins = isObject(settings.enabledPlugins) ? settings.enabledPlugins : {};
+  return Object.entries(plugins).some(([name, on]) => MEMORY_PLUGIN.test(name) && on === true);
+}
+
+export function planMemory(settings, config) {
+  const next = clone(settings);
+  const env = isObject(next.env) ? next.env : {};
+  const verify = verifyPattern(config?.verifyCommand);
+  const current = typeof env.CLAUDE_MEM_SKIP_BASH_PATTERNS === 'string' ? env.CLAUDE_MEM_SKIP_BASH_PATTERNS : undefined;
+  const base = current ?? MEMORY_SKIP_BASH_DEFAULT;
+  const patterns = verify === undefined || base.split('|').includes(verify) ? base : `${verify}|${base}`;
+  const notes = current !== undefined && patterns === current ? ['CLAUDE_MEM_SKIP_BASH_PATTERNS kept as set'] : [];
+  next.env = { ...env, ...MEMORY_ENV, CLAUDE_MEM_SKIP_BASH_PATTERNS: patterns };
+  return { next, notes };
 }
 
 export function planDeny(settings, names) {
@@ -229,6 +266,8 @@ function targetFor(part, ctx) {
       return join(ctx.home, '.claude.json');
     case 'sandbox':
       return ctx.user ? join(ctx.home, '.claude', 'settings.json') : join(ctx.projectPath, '.claude', 'settings.local.json');
+    case 'claude-mem':
+      return join(ctx.home, '.claude', 'settings.json');
     default:
       throw new Error(`unknown part ${part}`);
   }
@@ -246,6 +285,8 @@ async function planPart(part, data, ctx) {
       return planPins(data, ctx.projectPath, ctx.probes);
     case 'sandbox':
       return planSandbox(data, Array.isArray(ctx.config.sandboxDomains) ? ctx.config.sandboxDomains : []);
+    case 'claude-mem':
+      return planMemory(data, ctx.config);
     default:
       throw new Error(`unknown part ${part}`);
   }
@@ -265,6 +306,10 @@ async function runPart(part, ctx) {
   }
   const file = targetFor(part, ctx);
   const { exists, data } = readTarget(file);
+  if (part === 'claude-mem' && ctx.only !== part && !memoryEnabled(data)) {
+    out(`${part}: plugin not enabled in ${file}; skipped (run --only ${part} to write anyway)`);
+    return 0;
+  }
   const { next, notes, pins = [] } = await planPart(part, data, ctx);
   for (const note of notes) out(`${part}: ${note}`);
   const lines = part === 'mcp-pins' ? pins : diffKeys(data, next);

@@ -9,6 +9,7 @@ What the `tether` and `tether-nx` plugins defend against, which part does the de
 - Write access to issue trackers, code hosts and other services reached through MCP servers.
 - Credentials and environment variables on the developer's machine.
 - The local telemetry data, which holds Bash command text and tool names.
+- The store of a session-memory plugin, when one is installed: compressed tool input and output, including the contents of files the session read.
 
 ## Inputs and the guard that covers each
 
@@ -16,6 +17,7 @@ What the `tether` and `tether-nx` plugins defend against, which part does the de
 |---|---|---|
 | Ticket text, PR and issue comments read through an MCP server | Instructions planted in data steer the model into writing, pushing or posting. | `untrusted-input` hook (PostToolUse on `mcp__.*`) adds a reminder that the output is data; the `tether:untrusted-input` skill; `mcp-write-guard` denies listed write tools; `/tether:setup --only deny` adds the exact tools to `permissions.deny`. |
 | Design files read through an MCP server | Same as above: text inside a frame or a comment read as an instruction. | `untrusted-input` and `mcp-write-guard`, as above. |
+| Context a session-memory plugin injects at session start or returns from its search tools | Instructions planted in a ticket or page an earlier session read come back compressed, without their source. | `untrusted-input` hook, once the plugin's tool prefix is in `untrustedSources`; the `tether:untrusted-input` skill for the session-start block, which passes through no hook. |
 | Web pages read with `WebFetch` | Instructions planted in a page. | `untrusted-input` hook (PostToolUse on `WebFetch`); `/tether:setup --only sandbox` limits network domains for shell commands. |
 | npm packages and other dependencies | A package, or a formatter it brings, runs code on install or on every edit. | The Prettier hook (`prettier.sh`) uses only the project's installed Prettier and never fetches from npm; `/tether:setup --only mcp-pins` pins MCP server packages and images to a version or digest; `tether-nx` agents ask before adding a dependency (`DEP` row of the reviewer). |
 | MCP servers | A server changes behaviour on update, or exposes write tools the session should not use. | `/tether:setup --only mcp-pins`; `mcp-write-guard` with `mcpWriteDeny`; `/tether:setup --only deny`. |
@@ -27,6 +29,7 @@ What the `tether` and `tether-nx` plugins defend against, which part does the de
 - **Hooks fail open by design.** Every hook exits 0 on malformed input, a missing field or no `harness.json`, so a broken config or a crash in a hook removes that guard instead of blocking work. This keeps a plugin bug from locking a developer out, and it means a guard is not a security boundary.
 - **The git guard reads command text.** `git-guard` matches the Bash command string with regular expressions and reads the directory from a leading `cd` or `git -C`. A command that builds a path or a branch at run time, through a variable, a subshell, a script file or an alias, can evade it. Claude Code's permission rules and the sandbox are the stronger layer.
 - **Telemetry logs Bash command text locally.** `/tether:setup --only telemetry` sets `OTEL_LOG_TOOL_DETAILS=1`, so every Bash command, including any secret typed into one, is stored in the local Loki for 14 days. Prompt, response, tool-content and raw-body logging stay off, and every port binds to `127.0.0.1`.
+- **A memory plugin's store sits outside tether.** `claude-mem` keeps compressed tool input and output under `~/.claude-mem`, redacted only by its own patterns and only when its redaction is on. A `localOnlyPaths` file read in a session is stored there like any other, and the store is in neither `localOnlyPaths` nor the backup.
 - **The sandbox is not on by default.** A plugin cannot enable Claude Code's sandbox; `/tether:setup --only sandbox` writes it only when you run it and agree to the diff.
 - **A killed eval run leaves a worktree.** `eval-run.mjs` removes its `eval-*` worktree on interrupt or crash, but a SIGKILL skips that cleanup, and the worktree, with any local-only files copied into it, stays until the next eval run sweeps it.
 
