@@ -8,7 +8,7 @@ timeout_seconds: 600
 allowed_tools: [Agent, Read, Glob, Grep]
 ---
 
-Dispatch the `tether-web:code-reviewer` agent with the brief between BEGIN BRIEF and END BRIEF, word for word, and then reply with the review it returns, unchanged.
+Dispatch the `tether-web:code-reviewer` agent with the brief between BEGIN BRIEF and END BRIEF, word for word, and then reply with the review it returns, unchanged, with nothing added before or after it: its `Verdict:` line is the last line of your reply.
 
 BEGIN BRIEF
 Review the change Task 1 below produced. The current working directory is the codebase after the change (`libs/`, `tsconfig.base.json`); it has no git history, so the change is the patch `changes/task-1.diff` in that directory. The spec is `docs/specs/2026-10-05-order-api-actions.md`; its `## Decisions` list holds D1 and D2. There is no `.claude/tether-web.md`, no `.claude/tether-nx.md` and no `.claude/constitution.md`, so the defaults apply. There is no verify command output for this change.

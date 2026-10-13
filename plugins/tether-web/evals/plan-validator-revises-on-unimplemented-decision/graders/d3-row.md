@@ -1,6 +1,6 @@
 ---
 type: regex
-target: trace
-pattern: '(?:^|\n)[ \t]*\|[^\n]*\bD3\b[^\n]*\|'
+target: last_message
+pattern: '\|[^|\n]*\bD3\b[^|\n]*\|'
 weight: 2
 ---

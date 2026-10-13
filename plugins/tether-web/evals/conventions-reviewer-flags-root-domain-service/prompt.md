@@ -8,7 +8,7 @@ timeout_seconds: 600
 allowed_tools: [Agent, Read, Glob, Grep]
 ---
 
-Dispatch the `tether-web:conventions-reviewer` agent with the brief between BEGIN BRIEF and END BRIEF, word for word, and then reply with the review it returns, unchanged.
+Dispatch the `tether-web:conventions-reviewer` agent with the brief between BEGIN BRIEF and END BRIEF, word for word, and then reply with the review it returns, unchanged, with nothing added before or after it: its `Verdict:` line is the last line of your reply.
 
 BEGIN BRIEF
 Review the change below. The workspace is the read-only `workspace` directory added to this session; it has no git history, so the change is given as a diff, and the files after the change are in the workspace. There is no verify command output for this change. The new service keeps the exports the order list screen has made and is injected only by that screen; it talks to no API.
