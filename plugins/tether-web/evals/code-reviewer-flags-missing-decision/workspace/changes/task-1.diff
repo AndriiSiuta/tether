@@ -1,0 +1,59 @@
+diff --git a/libs/orders/data-access/src/lib/services/orders.api.spec.ts b/libs/orders/data-access/src/lib/services/orders.api.spec.ts
+new file mode 100644
+index 0000000..95253a2
+--- /dev/null
++++ b/libs/orders/data-access/src/lib/services/orders.api.spec.ts
+@@ -0,0 +1,28 @@
++import { provideHttpClient } from '@angular/common/http';
++import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
++import { TestBed } from '@angular/core/testing';
++import { Order } from '../models/order.model';
++import { OrdersApi } from './orders.api';
++
++describe('OrdersApi', () => {
++  const cancelled: Order = { id: 'o-1', status: 'cancelled', total: 120 };
++
++  beforeEach(() => {
++    TestBed.configureTestingModule({
++      providers: [OrdersApi, provideHttpClient(), provideHttpClientTesting()],
++    });
++  });
++
++  it('cancels an order and resolves with the updated order', async () => {
++    const api = TestBed.inject(OrdersApi);
++    const http = TestBed.inject(HttpTestingController);
++
++    const result = api.cancelOrder('o-1');
++    const request = http.expectOne('/api/orders/o-1/cancel');
++    expect(request.request.method).toBe('POST');
++    request.flush(cancelled);
++
++    await expect(result).resolves.toEqual(cancelled);
++    http.verify();
++  });
++});
+diff --git a/libs/orders/data-access/src/lib/services/orders.api.ts b/libs/orders/data-access/src/lib/services/orders.api.ts
+index 7389ed4..0a01469 100644
+--- a/libs/orders/data-access/src/lib/services/orders.api.ts
++++ b/libs/orders/data-access/src/lib/services/orders.api.ts
+@@ -10,4 +10,8 @@ export class OrdersApi {
+   fetchOrders(): Promise<Order[]> {
+     return firstValueFrom(this.http.get<Order[]>('/api/orders'));
+   }
++
++  cancelOrder(id: string): Promise<Order> {
++    return firstValueFrom(this.http.post<Order>(`/api/orders/${id}/cancel`, {}));
++  }
+ }
+diff --git a/libs/orders/feature/src/lib/order-list/order-list.component.html b/libs/orders/feature/src/lib/order-list/order-list.component.html
+index 369144f..9a0b9f2 100644
+--- a/libs/orders/feature/src/lib/order-list/order-list.component.html
++++ b/libs/orders/feature/src/lib/order-list/order-list.component.html
+@@ -1,6 +1,6 @@
+ <h1>{{ 'orders.orderList.title' | translate }}</h1>
+ @if (orders.hasValue()) {
+   @for (order of orders.value(); track order.id) {
+-    <div>{{ order.id }} {{ order.status }}</div>
++    <div>{{ order.id }} {{ order.status }} {{ order.total }}</div>
+   }
+ }
