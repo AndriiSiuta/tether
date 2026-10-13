@@ -54,7 +54,7 @@ Area is the library or folder the item lives in, so the investigator can find op
 
 ## Steps
 
-1. `git log --oneline <base>..HEAD` and `git diff --stat <base>..HEAD`, where `<base>` is the branch's merge base with the default branch. Sort the touched paths by the left column of the mapping.
+1. Run this skill's `scripts/branch-diff.sh <base>`, `<base>` the default branch; it prints the paths touched since the merge base. Sort them by the left column of the mapping; `git log --oneline <base>..HEAD` gives the commits behind them.
 2. Collect the branch's `Deferred:`, `Plan edits:` and unfixed review findings from the reports under `paths.reports` and the dispatch notes.
 3. Read `paths.followUps` for open items in the touched areas; mark the resolved ones done.
 4. For each mapping row that applies, open the home and check the fact against the code. Fix a stale sentence where it lives; replace any copy of it elsewhere with a pointer.
