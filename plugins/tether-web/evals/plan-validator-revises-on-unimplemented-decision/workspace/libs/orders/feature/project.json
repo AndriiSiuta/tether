@@ -1,0 +1,6 @@
+{
+  "name": "orders-feature",
+  "projectType": "library",
+  "sourceRoot": "libs/orders/feature/src",
+  "tags": ["scope:orders", "type:feature"]
+}

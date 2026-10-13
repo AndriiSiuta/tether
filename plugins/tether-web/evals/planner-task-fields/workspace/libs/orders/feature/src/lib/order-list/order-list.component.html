@@ -1,0 +1,6 @@
+<h1>{{ 'orders.orderList.title' | translate }}</h1>
+@if (orders.hasValue()) {
+  @for (order of orders.value(); track order.id) {
+    <div>{{ order.id }} {{ order.status }}</div>
+  }
+}

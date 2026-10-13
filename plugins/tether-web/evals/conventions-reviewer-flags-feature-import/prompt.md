@@ -1,6 +1,6 @@
 ---
 description: The conventions reviewer fails the row for a feature library that imports another feature library.
-expected_outcome: The returned table has the columns Rule, Verdict and Evidence, marks the FEAT-3 row fail with invoice-list.component.ts as its evidence; the verdict is not a plain approve.
+expected_outcome: 'The returned table has the columns Rule, Verdict and Evidence, marks the FEAT-3 row fail with invoice-list.component.ts as its evidence; the final line is `Verdict: fail` and no `Verdict: pass` appears.'
 tags: [smoke, conventions-reviewer]
 max_turns: 15
 timeout_seconds: 600

@@ -1,4 +1,6 @@
 schema_version: "1.1"
 name: implementer-blocks-on-open-placement
+# Run with --scaffold: scaffold.sh stages the fixture in the run's working directory because an add_dirs folder is
+# readable but never announced to the agent. No Write grant: the case passes only when nothing is written.
 context:
   scaffold_script: scaffold.sh

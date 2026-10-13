@@ -1,4 +1,6 @@
 schema_version: "1.1"
 name: planner-task-headings
+# Run with --allow-tools Write --scaffold: the planner writes the plan file, and scaffold.sh stages the fixture in the
+# run's working directory because an add_dirs folder is readable but never announced to the agent.
 context:
   scaffold_script: scaffold.sh
