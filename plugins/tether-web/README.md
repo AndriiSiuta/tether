@@ -24,7 +24,7 @@ claude plugin install tether-web@tether --scope local
 
 `--scope local` enables the plugin in `.claude/settings.local.json` for this project only. After a new tag, run `claude plugin marketplace update tether` and then `claude plugin update tether-web@tether`, and start a new session.
 
-`tether-web` needs `tether-nx` (its agents preload `tether-nx` skills) and the official Nx plugin, which supplies the workspace skills the agents use to read projects, targets and generators. Its `plugin.json` lists both under `dependencies`. The Nx plugin lives in the [`nrwl/nx-ai-agents-config`](https://github.com/nrwl/nx-ai-agents-config) repository, whose `.claude-plugin/marketplace.json` names the marketplace `nx-claude-plugins` and the plugin `nx`:
+`tether-web` needs `tether-nx` (its agents preload `tether-nx` skills), which its `plugin.json` lists under `dependencies`. The official Nx plugin is recommended beside it: it supplies the workspace skills the agents use to read projects, targets and generators, and it is not a declared dependency because a dependency outside this marketplace cannot be loaded into an eval run. The Nx plugin lives in the [`nrwl/nx-ai-agents-config`](https://github.com/nrwl/nx-ai-agents-config) repository, whose `.claude-plugin/marketplace.json` names the marketplace `nx-claude-plugins` and the plugin `nx`:
 
 ```
 claude plugin marketplace add nrwl/nx-ai-agents-config
@@ -147,7 +147,7 @@ Eight cases under [`evals/`](evals/), in Claude Code's `claude plugin eval` form
 | `code-reviewer-flags-missing-decision` | For a brief with `spec: D1, D2` and a diff that builds D1, leaves D2 unbuilt and touches a template outside `touches:`, the review carries a `SPEC` row marking `D2` `missing`, a `SPEC extra` row graded `major`, and the final line `Verdict: fail`. Needs `--scaffold`. |
 | `spec-writer-stops-without-pattern-row` | For a ticket that needs a new store in a codebase with no store to copy, the spec lists the store's shape under open decisions and writes no `copies the shape of` path for it. Needs `--allow-tools Write --scaffold`. |
 
-The two reviewer cases carry the change inline in the brief and need no fixture read. The other six stage their fixture in the run's working directory with a `scaffold_script`, because the runner grants reads on an `add_dirs` folder but never tells the agent its path; run them with `--scaffold`.
+Every case declares `plugins: ["../..", "../../../tether-nx"]`, because the agents preload `tether-nx` skills and an eval session loads nothing that is not named by the case. A case may only load plugins under the directory the command runs against, so run the suite from the repository root: `claude plugin eval . --eval-dir plugins/tether-web/evals --ablation none --scaffold --allow-tools Write --no-publish`. The two reviewer cases carry the change inline in the brief and need no fixture read. The other six stage their fixture in the run's working directory with a `scaffold_script`, because the runner grants reads on an `add_dirs` folder but never tells the agent its path; run them with `--scaffold`.
 
 Every run is a real model call on your account. From the repository root, a cheap single pass with no baseline arm:
 

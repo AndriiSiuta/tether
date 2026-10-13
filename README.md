@@ -8,7 +8,7 @@ A Claude Code plugin marketplace with three plugins.
 
 **[tether-nx](plugins/tether-nx/README.md)** is a set of rules for Angular and Nx workspaces: library layers, route-scoped providers, signals over RxJS, SignalStore, PrimeNG, performance and accessibility. A project overrides any rule in its `.claude/tether-nx.md`. It is skills only; the agents that apply the rules live in `tether-web`.
 
-**[tether-web](plugins/tether-web/README.md)** is the workflow for a web front end: an investigator, spec-writer, planner, plan-validator, two implementers, a conventions reviewer, a code reviewer, a ui-checker and a pr-creator, plus the process skills they preload. A project sets its tracker, pull-request host, preview URL, verify command and paths in `.claude/tether-web.md`. It depends on `tether-nx` and on the `nx` plugin from the `nx-claude-plugins` marketplace.
+**[tether-web](plugins/tether-web/README.md)** is the workflow for a web front end: an investigator, spec-writer, planner, plan-validator, two implementers, a conventions reviewer, a code reviewer, a ui-checker and a pr-creator, plus the process skills they preload. A project sets its tracker, pull-request host, preview URL, verify command and paths in `.claude/tether-web.md`. It depends on `tether-nx`; the `nx` plugin from the `nx-claude-plugins` marketplace is recommended beside it.
 
 ## Install
 
@@ -21,7 +21,7 @@ claude plugin install tether-nx@tether --scope local
 claude plugin install tether-web@tether --scope local
 ```
 
-`tether` and `tether-nx` each work alone; `tether-web` needs `tether-nx` and the `nx` plugin from the `nx-claude-plugins` marketplace beside it. Each plugin's README covers its configuration. Requirements: Claude Code with plugin support, Node 24 and git; the optional parts (telemetry, metrics, backup) list their own tools in the tether README.
+`tether` and `tether-nx` each work alone; `tether-web` needs `tether-nx`, and works best with the `nx` plugin from the `nx-claude-plugins` marketplace beside it. Each plugin's README covers its configuration. Requirements: Claude Code with plugin support, Node 24 and git; the optional parts (telemetry, metrics, backup) list their own tools in the tether README.
 
 **Platforms:** tested on Linux; macOS and Windows are untested. The hooks need Node 24, the Prettier hook also needs `python3`, and telemetry needs Docker.
 

@@ -15,6 +15,8 @@ All notable changes to the `tether` marketplace and its plugins. Versions follow
 - README: fix rounds 1 and 2 resume the same implementer by name; `syncing-docs` is a required ledger row before `pr-creator`; `isolation: worktree` per wave when pre-commit hooks are flaky under parallel commits.
 - Skills: `ui-check-playwright-cli` has a trigger-only description and `scripts/ui-check.sh <base-url> <route> "<text>" <out.png>` (one text check, one retry, whole-page screenshot; exit 0 pass, 1 fail, 3 blocked), and its command table gives way to `playwright-cli --help`; `testing-jest-spectator` gains a `Recipe` column pointing into `references/recipes.md`, which gains a Contents list; `tailwind-tokens` gains `scripts/check-sizes.sh`; `syncing-docs` gains `scripts/branch-diff.sh <base>`; `writing-feature-spec` gains `examples/good-spec.md`, a filled spec with decisions D1–D5 and a copies-the-shape-of placement row.
 - Two eval cases: `code-reviewer-flags-missing-decision` and `spec-writer-stops-without-pattern-row`.
+- `plugin.json` declares `dependencies: ["tether-nx"]` only; the `nx@nx-claude-plugins` entry is gone, because the eval runner refuses to load a plugin whose dependency it cannot resolve and a cross-marketplace plugin never resolves inside an eval. The Nx plugin stays a README recommendation.
+- Every eval case declares `plugins: ["../..", "../../../tether-nx"]` and the suite runs from the repository root (`claude plugin eval . --eval-dir plugins/tether-web/evals …`), so the agents find the `tether-nx` skills they preload. First run of all eight cases under the `tether-web:*` names.
 
 ### tether-nx 0.3.1
 - `angular-architecture`: trigger-only description, a routing table and per-section pointers to its references; bundle budgets and lazy loading move to `references/bundle-budgets.md`; `di-scope.md` and `layer-boundaries.md` gain Contents lists. No rule changed.
@@ -26,6 +28,9 @@ All notable changes to the `tether` marketplace and its plugins. Versions follow
 - `/tether:setup --only harness`: the starter `reportFields` gain `Red:`.
 - `spec-cap`: `spec.agent` accepts one agent type or a list, e.g. `["tether-web:spec-writer", "spec-writer"]`.
 - README: config rows for `reportFields`, `checksPassLine` and `spec`, and hooks rows for `implementer-report` and `spec-cap`.
+
+### Repository
+- The marketplace no longer sets `allowCrossMarketplaceDependenciesOn`; no plugin declares a cross-marketplace dependency.
 
 ## v0.4.3
 
