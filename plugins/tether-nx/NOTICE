@@ -19,3 +19,28 @@ reference links (WCAG quick reference, axe rules, the local references)
 condensed from web-quality-skills. From web-quality-skills, the files
 skills/ng-accessibility/references/A11Y-PATTERNS.md and
 skills/ng-accessibility/references/WCAG.md are included.
+
+skills/ng-signalstore — from alfredoperez/angular-best-practices, the
+angular-best-practices-signalstore skill at version 1.2.0 (the upstream
+repository is archived), MIT, Copyright (c) 2025 alfredoperez, license in
+skills/ng-signalstore/LICENSE. The upstream repository has no LICENSE file
+at its root and states MIT in its README and in the skill's frontmatter, so
+the copyright year is to be confirmed with the author.
+Modified: the folder renamed; the frontmatter name and description
+rewritten as a trigger, and the tags and globs keys dropped; a one-line
+pointer to the project rules file added after the first heading; the Links
+and Install sections replaced by a link to AGENTS.md; a section "Async in a
+store" appended (rxMethod with tapResponse and a call-state feature, no
+Observable-returning store methods, no swap tokens for previews). AGENTS.md
+is included unchanged.
+
+skills/ng-primeng — from alfredoperez/angular-best-practices, the
+angular-best-practices-primeng skill at version 1.2.0 (the upstream
+repository is archived), MIT, Copyright (c) 2025 alfredoperez, license in
+skills/ng-primeng/LICENSE; the copyright year is to be confirmed, as for
+ng-signalstore.
+Modified: the folder renamed; the frontmatter name and description
+rewritten as a trigger, and the tags and globs keys dropped; a one-line
+pointer to the project rules file added after the first heading; the Links
+and Install sections replaced by a link to AGENTS.md. AGENTS.md is included
+unchanged.

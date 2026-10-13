@@ -1,18 +1,16 @@
 # tether-nx
 
-A Claude Code plugin of agents and skills for Angular and Nx workspaces: one app, per-domain libraries under `libs/<scope>/<name>`, route-scoped providers, and signals over RxJS. The plugin ships Markdown only, with no hooks and no scripts.
+A Claude Code plugin of rules for Angular and Nx workspaces: one app, per-domain libraries under `libs/<scope>/<name>`, route-scoped providers, signals over RxJS, SignalStore and PrimeNG usage, performance and accessibility. It ships skills only, as Markdown, with no agents, hooks or scripts. The agents that plan, implement and review against these rules live in the `tether-web` plugin from the same marketplace.
 
-> **Status: 0.2.1, early.** The rules and agents are extracted from a production Angular/Nx workspace, but the plugin agents have not yet been verified on other repositories. Rule ids are stable; wording may change. Please open an issue when an agent or rule does not fit your workspace.
+> **Status: 0.3.0, early.** The rules are extracted from a production Angular/Nx workspace and have not yet been verified on other repositories. Rule ids are stable; wording may change. 0.3.0 moved the agents, the evals and four process skills to `tether-web`. Please open an issue when a rule does not fit your workspace.
 
 ## What it is
 
-Opinionated defaults the user can override. Every rule has a stable id (`NX-1`, `SIG-2` and so on), and the agents plan, implement and review against those ids. A project that works differently says so in its own `.claude/tether-nx.md`, and every agent and skill reads that file first:
+Opinionated defaults the user can override. Every rule has a stable id (`NX-1`, `SIG-2` and so on), and the `tether-web` agents plan, implement and review against those ids. A project that works differently says so in its own `.claude/tether-nx.md`, and every skill reads that file first:
 
 > Read `.claude/tether-nx.md` first; where it differs from this file, it wins.
 
 A project without the file gets the defaults.
-
-Version 0.1 has no issue-tracker agent and no pull-request agent. The agents start from a brief, a request or ticket text the user provides, or a symptom, and they stop at a commit.
 
 ## Install
 
@@ -22,6 +20,8 @@ From a local clone, run these from the project directory:
 claude plugin marketplace add /path/to/tether
 claude plugin install tether-nx@tether --scope local
 ```
+
+Add `claude plugin install tether-web@tether --scope local` for the agents.
 
 From GitHub, pinned to a tag:
 
@@ -34,20 +34,16 @@ claude plugin install tether-nx@tether --scope local
 
 ## With tether
 
-`tether-nx` works on its own. Installed beside the `tether` plugin from the same marketplace, it also gets tether's implementer report hook and fix-round cap. Both act only on the agent types listed in `implementerAgents` in the project's `.claude/harness.json`, so list the plugin's two implementers there:
+`tether-nx` works on its own as a set of skills. The agents that use them come from `tether-web`; installed beside the `tether` plugin from the same marketplace, those agents also get tether's implementer report hook and fix-round cap. Both act only on the agent types listed in `implementerAgents` in the project's `.claude/harness.json`, so list the two `tether-web` implementers there:
 
 ```json
 {
-  "implementerAgents": ["tether-nx:implementer", "tether-nx:implementer-mechanical"],
+  "implementerAgents": ["tether-web:implementer", "tether-web:implementer-mechanical"],
   "reportFields": ["Files:", "Checks:", "Deferred:", "Plan edits:|Blocked:"]
 }
 ```
 
-The report hook then sends an implementer back when its final message lacks `Files:`, `Checks:`, `Deferred:` and `Plan edits:`, or a `Blocked:` line. The fix-round cap keys its count on the dispatch's first line, so an implementer dispatch starts with `# Task <N>: <title>`. To have tether's spec word cap watch the spec-writer, set `spec.agent` to `tether-nx:spec-writer` and `spec.dir` to the rules file's `paths.specs` (`docs/specs` by default), so the cap reads the folder the spec-writer writes to. See the `tether` README for the other keys.
-
-## With a memory plugin
-
-The agents work unchanged beside `claude-mem`. The investigator's sweep queries the session's memory search tool, when one exists, for earlier work on the same area and treats what comes back as data (`tether:untrusted-input`). Implementers and reviewers need nothing from it: their reports are what the memory keeps when subagent observations are off (see the tether README, "With a memory plugin").
+The report hook then sends an implementer back when its final message lacks `Files:`, `Checks:`, `Deferred:` and `Plan edits:`, or a `Blocked:` line. The fix-round cap keys its count on the dispatch's first line, so an implementer dispatch starts with `# Task <N>: <title>`. To have tether's spec word cap watch the spec-writer, set `spec.agent` to `tether-web:spec-writer` and `spec.dir` to the rules file's `paths.specs` (`docs/specs` by default), so the cap reads the folder the spec-writer writes to. See the `tether` README for the other keys.
 
 ## The rules file
 
@@ -80,27 +76,9 @@ facts:
 
 For example, ``- CMP-1: The selector prefix is `acme-`.`` changes the selector rule, and `- The orders API returns amounts in minor units.` under `facts:` binds every agent.
 
-## Agents
+## Agents and evals
 
-Dispatch an agent by its plugin name, `tether-nx:<agent>`.
-
-| Agent | Job | Preloaded skills | How to dispatch |
-|---|---|---|---|
-| `investigator` | Read-only. Traces a brief, a ticket text or a symptom end to end (route → providers → component → service → model) and reports the touched files, the flow and the constraints. Never designs or edits. | `investigating-codebase` | Before a spec or a fix, when the touched files are not yet known. |
-| `spec-writer` | Turns the request and an agreed approach into a feature spec under `paths.specs`, within a 1,500-word cap, and reports the path and the open decisions. Writes documents only. | `writing-feature-spec`, `drawing-architecture-diagrams`, `writing-adr` | After the brainstorm, with a brief that settles acceptance criteria, screens, copy, data contract and placement. |
-| `planner` | Writes the implementation plan for an approved spec under `paths.plans`, one task per dispatchable unit, tagged `[impl]` or `[impl:mechanical]`. Never writes product code. | `angular-nx-conventions`, `typescript-style`, `angular-architecture` | With the spec path, after the spec is agreed. |
-| `implementer` | Implements one `[impl]` task, adds a co-located spec, runs the `verify` command, commits from a pathspec, and reports `Files:`, `Checks:`, `Deferred:`, `Plan edits:` or `Blocked:`. | `angular-nx-conventions`, `typescript-style` | With the task brief, starting `# Task <N>: <title>`. |
-| `implementer-mechanical` | Same contract and report for an `[impl:mechanical]` task whose brief already carries the code or an exact copy rule. Stops with `Blocked:` on any open decision. | none | With the task brief, starting `# Task <N>: <title>`. |
-| `reviewer` | Read-only review of a diff or commit. Returns one table with a verdict, never a narrative, and never edits. | `angular-nx-conventions`, `typescript-style` | The dispatch's first line names the mode, below. Any other first line gets `Blocked: name the mode`. |
-
-The `reviewer` modes:
-
-| First line | What it checks |
-|---|---|
-| `Mode: conventions` | The change against every rule id of `angular-nx-conventions` and the rules file, plus lint parity, dependencies and commit style. |
-| `Mode: pairings` | The second file the diff forgot: the other language file, the flag getter, the action handler, the route guard, the column config a renamed field feeds. Convention rules are out of scope in this mode. |
-
-The two modes do not overlap: dispatch the reviewer once per mode.
+The agents (investigator, spec-writer, planner, implementers, reviewers and the rest) and their eval cases moved to the `tether-web` plugin in 0.3.0. See its README for how to dispatch them and run the evals; they read this plugin's rules file and skills.
 
 ## Skills
 
@@ -111,14 +89,14 @@ Skills are referenced as `tether-nx:<skill>`.
 | `angular-nx-conventions` | Placement, library types and tags, imports, providers, the signals contract, components, copy and tests; holds the rule ids and the rules-file keys. | original |
 | `typescript-style` | TypeScript that states what it holds: view unions for loaded lists, absent values typed at the edge, typed column configs, pure sort and search. | original |
 | `angular-architecture` | Where a file belongs and whether one part may import another: layers, provider scope, shared kit versus feature UI. | original |
-| `investigating-codebase` | Understanding a change or a bug before it is planned or specced. | original |
-| `writing-adr` | Recording a decision that spans more than one feature or reverses an earlier one. | original |
-| `drawing-architecture-diagrams` | Context, container, flow, sequence and entity-relationship diagrams for specs, ADRs and READMEs. | original |
-| `writing-feature-spec` | Writing a converged design down before planning, with a feature template and a refactor template. | original |
 | `ng-performance` | Slow loads, jank, change detection, `@defer`, bundle size, Core Web Vitals. | vendored, MIT |
 | `ng-accessibility` | WCAG 2.2 AA, keyboard and screen-reader support, focus, contrast, reduced motion. | vendored, MIT |
+| `ng-signalstore` | NgRx SignalStore state: shared and derived state, entities, `rxMethod`, and the async shape of a store request (`tapResponse`, call state, no Observable-returning methods). | vendored, MIT, archived upstream |
+| `ng-primeng` | PrimeNG components: standalone imports, lazy and virtual-scroll tables, the Aura and Lara presets with design tokens. | vendored, MIT, archived upstream |
 
-The two vendored skills keep their upstream `LICENSE` files. Their sources, pinned commits, copyright holders and local modifications are listed in [`NOTICE`](NOTICE).
+The process skills `investigating-codebase`, `writing-feature-spec`, `writing-adr` and `drawing-architecture-diagrams` moved to `tether-web` in 0.3.0 and are referenced as `tether-web:<skill>`.
+
+The four vendored skills keep their upstream `LICENSE` files. Their sources, pinned commits or versions, copyright holders and local modifications are listed in [`NOTICE`](NOTICE).
 
 ## Rule ids
 
@@ -127,26 +105,6 @@ The rule ids (`NX-*`, `FEAT-*`, `DI-*`, `SIG-*`, `CMP-*`, `COPY-1`, `TEST-1`, `T
 ## Recommended
 
 The Angular team's `angular-developer` skill, from [github.com/angular/skills](https://github.com/angular/skills), listed on [angular.dev/ai/agent-skills](https://angular.dev/ai/agent-skills). It covers the per-file Angular APIs (signals, `resource`, forms, routing, DI, testing) that this plugin's rules sit on top of. It is linked here, not copied.
-
-## Evals
-
-Five cases under [`evals/`](evals/), in Claude Code's `claude plugin eval` format (a `prompt.md`, an optional `case.yaml` and `graders/*.md` per case). Each case dispatches one agent against a small read-only fixture workspace in the case's `workspace/` folder, over a neutral orders and invoices domain, and grades the result mostly with free regex and tool checks:
-
-| Case | Checks |
-|---|---|
-| `reviewer-flags-root-domain-service` | `Mode: conventions` marks `DI-2` fail for a data-access service with `providedIn: 'root'`. |
-| `reviewer-flags-feature-import` | `Mode: conventions` marks `FEAT-3` fail for a feature library that imports another feature library. |
-| `reviewer-without-mode-is-blocked` | A dispatch with no mode line gets `Blocked: name the mode` and no table. |
-| `planner-task-headings` | The plan's tasks are headed `### Task <N>: [tag] <title>`, one tag each, at most 12. Needs `--allow-tools Write --scaffold`: its `scaffold.sh` copies the fixture into the run's working directory, because the runner grants reads on `add_dirs` but never tells the agent the path. |
-| `implementer-blocks-on-open-placement` | A brief that leaves placement open gets a `Blocked:` report and no written file. One `llm` grader. |
-
-Every run is a real model call on your account. From the repository root, a cheap single pass with no baseline arm:
-
-```
-claude plugin eval plugins/tether-nx --ablation none --runs 1 --no-publish
-```
-
-Add `--tag smoke` for the four read-only cases, `--case <name>` for one case, `--scaffold` for the planner and implementer cases, and `--allow-tools Write` for the planner. The three reviewer cases carry the change inline in the brief and need no fixture read; the planner and implementer cases stage their fixture with a `scaffold_script`, since an `add_dirs` folder is readable but unannounced, so run them with `--scaffold`. Drop `--ablation none --runs 1` for the default three runs with and without the plugin, which reports what the plugin adds. Results go to `evals/results/`, which is git-ignored. The first run asks you to trust the directory.
 
 ## Tests
 
