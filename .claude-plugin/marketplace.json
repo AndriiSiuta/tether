@@ -1,6 +1,6 @@
 {
   "name": "tether",
-  "description": "Claude Code plugins: tether, project-neutral guards, telemetry and evals configured per project; and tether-nx, agents and skills for Angular and Nx workspaces.",
+  "description": "Claude Code plugins: tether, project-neutral guards, telemetry and evals configured per project; tether-nx, Angular and Nx rules; and tether-web, the workflow agents and process skills that apply them.",
   "owner": {
     "name": "Andrii Siuta"
   },
@@ -13,9 +13,15 @@
     {
       "name": "tether-nx",
       "source": "./plugins/tether-nx",
-      "description": "Opinionated agents and skills for Angular and Nx workspaces: library layers, route-scoped providers, signals over RxJS, and a planner, implementer and reviewer that follow them. A project overrides any rule in .claude/tether-nx.md."
+      "description": "Angular and Nx rules for Claude Code agents: library layers, route-scoped providers, signals over RxJS, SignalStore and PrimeNG rules, performance and accessibility; the agents that apply them live in tether-web. A project overrides any rule in .claude/tether-nx.md."
+    },
+    {
+      "name": "tether-web",
+      "source": "./plugins/tether-web",
+      "description": "Workflow agents and process skills for a web front end: investigator, spec-writer, planner, plan-validator, implementers, two reviewers, ui-checker and pr-creator, driven by a per-project .claude/tether-web.md rules file. Depends on tether-nx and the official nx plugin."
     }
   ],
+  "allowCrossMarketplaceDependenciesOn": ["nx-claude-plugins"],
   "renames": {
     "harness": "tether"
   }
