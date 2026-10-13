@@ -2,7 +2,7 @@
 
 All notable changes to the `tether` marketplace and its plugins. Versions follow the plugins' `version` fields; tags cover the whole repository.
 
-## Unreleased
+## v0.4.3
 
 ### tether-web 0.1.0 (new)
 - A workflow plugin for a web front end, split from `tether-nx`. Its `plugin.json` declares `dependencies: ["tether-nx", "nx@nx-claude-plugins"]`.
@@ -11,7 +11,7 @@ All notable changes to the `tether` marketplace and its plugins. Versions follow
 - The planner writes `touches:`, `conflicts_with:`, `spec:` and `checks:` under every task heading, a `## Shared files` list and a `## Waves` section; the spec-writer writes a numbered `## Decisions` list the planner and the validator cite.
 - Skills: `investigating-codebase`, `writing-feature-spec`, `writing-adr` and `drawing-architecture-diagrams` (moved from `tether-nx`), and new `constitution`, `testing-jest-spectator`, `ui-check-playwright-cli`, `tailwind-tokens` and `syncing-docs`. The vendored `e2e-playwright` and `frontend-design` skills follow in a later release.
 - A project sets `tracker`, `pr`, `preview`, `verify`, `paths`, `models`, `constitution` and `facts` in `.claude/tether-web.md`; without the file the defaults apply, and `verify` and `paths` fall back to `.claude/tether-nx.md`.
-- The eval cases moved from `tether-nx`: the two reviewer cases are renamed for `conventions-reviewer`, `implementer-blocks-on-open-placement` and `planner-task-headings` are unchanged, and `reviewer-without-mode-is-blocked` is deleted, since no agent has modes. Two cases are still to come: `planner-task-fields` and `plan-validator-revises-on-unimplemented-decision`.
+- The eval cases moved from `tether-nx`: the two reviewer cases are renamed for `conventions-reviewer`, `implementer-blocks-on-open-placement` and `planner-task-headings` are unchanged, and `reviewer-without-mode-is-blocked` is deleted, since no agent has modes.
 
 ### tether-nx 0.3.0
 - Breaking: the agents, the eval cases and the four process skills (`investigating-codebase`, `writing-feature-spec`, `writing-adr`, `drawing-architecture-diagrams`) moved to `tether-web`; `tether-nx:<skill>` references to those four become `tether-web:<skill>`.
