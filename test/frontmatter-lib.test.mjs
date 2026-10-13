@@ -105,7 +105,17 @@ test('an agent skills entry with no folder is reported', () => {
 
 test('an agent skills entry naming another plugin is reported', () => {
   const result = findings({ 'plugins/tether-nx/agents/worker.md': agent('worker', '\nskills: [other:plain]') });
-  assert.deepEqual(result, ['plugins/tether-nx/agents/worker.md: skills entry "other:plain" names plugin "other", not "tether-nx"']);
+  assert.deepEqual(result, ['plugins/tether-nx/agents/worker.md: skills entry "other:plain" names plugin "other", not "tether-nx" or a dependency of it']);
+});
+
+test('an agent skills entry naming a dependency plugin resolves against that plugin', () => {
+  const result = findings({
+    'plugins/tether-web/.claude-plugin/plugin.json': JSON.stringify({ name: 'tether-web', dependencies: ['tether-nx', 'nx@nx-claude-plugins'] }),
+    'plugins/tether-web/agents/worker.md': agent('worker', '\nskills:\n  - tether-nx:beta\n  - tether-nx:missing'),
+  });
+  assert.deepEqual(result, [
+    'plugins/tether-web/agents/worker.md: skills entry "tether-nx:missing" has no folder plugins/tether-nx/skills/missing in dependency "tether-nx"',
+  ]);
 });
 
 test('a tether-nx skill or agent without the rules-file sentence is reported', () => {

@@ -110,7 +110,15 @@ function checkSkillLinks(root, skillDir) {
   return findings;
 }
 
-function checkAgent({ root, plugin, pluginDir, file, skills }) {
+// A plugin may preload a skill of a plugin its manifest lists under `dependencies`; an `@marketplace` suffix is dropped.
+function pluginDependencies(pluginDir) {
+  const manifest = join(pluginDir, '.claude-plugin', 'plugin.json');
+  if (!existsSync(manifest)) return [];
+  const parsed = JSON.parse(readFileSync(manifest, 'utf8'));
+  return (Array.isArray(parsed.dependencies) ? parsed.dependencies : []).map((dep) => String(dep).split('@')[0]);
+}
+
+function checkAgent({ root, plugin, pluginDir, file, skills, dependencies }) {
   const rel = relative(root, file);
   const parsed = parseFrontmatter(readFileSync(file, 'utf8'));
   const findings = checkCommon({ rel, parsed, expectedName: basename(file, '.md'), kind: 'agent', plugin });
@@ -119,8 +127,14 @@ function checkAgent({ root, plugin, pluginDir, file, skills }) {
     const separator = entry.lastIndexOf(':');
     const prefix = separator === -1 ? plugin : entry.slice(0, separator);
     const skill = entry.slice(separator + 1);
-    if (prefix !== plugin) findings.push(`${rel}: skills entry "${entry}" names plugin "${prefix}", not "${plugin}"`);
-    else if (!skills.includes(skill)) findings.push(`${rel}: skills entry "${entry}" has no folder ${relative(root, join(pluginDir, 'skills', skill))}`);
+    if (prefix === plugin) {
+      if (!skills.includes(skill)) findings.push(`${rel}: skills entry "${entry}" has no folder ${relative(root, join(pluginDir, 'skills', skill))}`);
+    } else if (dependencies.includes(prefix)) {
+      const depSkill = join(root, 'plugins', prefix, 'skills', skill, 'SKILL.md');
+      if (!existsSync(depSkill)) findings.push(`${rel}: skills entry "${entry}" has no folder ${relative(root, dirname(depSkill))} in dependency "${prefix}"`);
+    } else {
+      findings.push(`${rel}: skills entry "${entry}" names plugin "${prefix}", not "${plugin}" or a dependency of it`);
+    }
   }
   for (const mention of new Set(parsed.body.match(REFERENCE) ?? [])) {
     if (!skills.some((skill) => existsSync(join(pluginDir, 'skills', skill, mention)))) {
@@ -145,7 +159,7 @@ export function checkPlugins(root) {
     const agentsDir = join(pluginDir, 'agents');
     const agents = existsSync(agentsDir) ? readdirSync(agentsDir).filter((name) => name.endsWith('.md')).sort() : [];
     for (const name of agents) {
-      findings.push(...checkAgent({ root, plugin, pluginDir, file: join(agentsDir, name), skills }));
+      findings.push(...checkAgent({ root, plugin, pluginDir, file: join(agentsDir, name), skills, dependencies: pluginDependencies(pluginDir) }));
     }
   }
   return findings;

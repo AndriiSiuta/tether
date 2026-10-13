@@ -20,6 +20,7 @@ export const ALLOWED_SCOPES = new Set([
   'ng-web-apis',
   'azure-devops',
   'anthropic-ai',
+  'playwright',
   'org',
 ]);
 
