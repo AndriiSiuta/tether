@@ -2,6 +2,31 @@
 
 All notable changes to the `tether` marketplace and its plugins. Versions follow the plugins' `version` fields; tags cover the whole repository.
 
+## Unreleased
+
+### tether-web 0.2.0
+- `code-reviewer` checks spec conformance per task: one `SPEC D<n>` row per decision in the brief's `spec:` field (`met` with `path:line`, `missing`, or `extra`). An `extra` outside `touches:` is `major`; a missing decision or a major extra fails the verdict. A brief without `spec:` gets one `SPEC: no decisions in brief` row.
+- `conventions-reviewer` returns only `fail` and `unverified` rows plus a `Checked: <n> rules, <p> pass, <f> fail, <u> unverified` line, and is dispatched only on tasks the plan marks `new shape`.
+- `planner` no longer invokes `superpowers:writing-plans`. A decision the spec lacks is appended to the spec's `## Amendments` as a new dated `D<n>` ("decided by the planner, confirm") before the plan is written, and reported under `Spec amendments:`. Interfaces are `Produces:`/`Consumes:` lines. `maxTurns: 60`.
+- `plan-validator` gains a `decisions` check (every design choice in a task maps to a `D<n>`) and an `interfaces` check (every `Produces:` name is consumed later or cited by the spec), and accepts ids from the spec's Amendments.
+- `spec-writer` and the spec templates: every new store, service or component names the existing file whose shape it copies. With none, it is an open decision and the brainstorm runs again before planning.
+- `implementer` and `implementer-mechanical` report `Red:` (the failing test and its assertion line, or `Red: none: <why>`), quote the verify pass line verbatim under `Checks:`, and re-read their diff against `spec:` and `touches:` before reporting.
+- `pr-creator` prints the prepared title and body under `Blocked: MCP write denied` when the permission system denies the create call, and never retries through another CLI or a browser.
+- README: fix rounds 1 and 2 resume the same implementer by name; `syncing-docs` is a required ledger row before `pr-creator`; `isolation: worktree` per wave when pre-commit hooks are flaky under parallel commits.
+- Skills: `ui-check-playwright-cli` has a trigger-only description and `scripts/ui-check.sh <base-url> <route> "<text>" <out.png>` (one text check, one retry, whole-page screenshot; exit 0 pass, 1 fail, 3 blocked), and its command table gives way to `playwright-cli --help`; `testing-jest-spectator` gains a `Recipe` column pointing into `references/recipes.md`, which gains a Contents list; `tailwind-tokens` gains `scripts/check-sizes.sh`; `syncing-docs` gains `scripts/branch-diff.sh <base>`; `writing-feature-spec` gains `examples/good-spec.md`, a filled spec with decisions D1–D5 and a copies-the-shape-of placement row.
+- Two eval cases: `code-reviewer-flags-missing-decision` and `spec-writer-stops-without-pattern-row`.
+
+### tether-nx 0.3.1
+- `angular-architecture`: trigger-only description, a routing table and per-section pointers to its references; bundle budgets and lazy loading move to `references/bundle-budgets.md`; `di-scope.md` and `layer-boundaries.md` gain Contents lists. No rule changed.
+- `ng-accessibility`: a local routing table under the overview names `references/WCAG.md` and `references/A11Y-PATTERNS.md`; both gain Contents lists; vendored text unchanged.
+- `typescript-style`: `scripts/check-style.sh <ts…>` flags loose `== null`/`!= null`, non-null assertions, in-place `.sort(`, self-reassigned parameter defaults and method calls on `[ngClass]`; `references/before-after.md` gains a Contents list.
+
+### tether 0.4.4
+- `implementer-report`: optional `checksPassLine` regex in `harness.json`. With it set, the `Checks:` section (the `Checks:` line and the lines below it up to the next report field) must quote the verify pass line, or the implementer is sent back. A `Blocked:` line still passes; without the key nothing changes.
+- `/tether:setup --only harness`: the starter `reportFields` gain `Red:`.
+- `spec-cap`: `spec.agent` accepts one agent type or a list, e.g. `["tether-web:spec-writer", "spec-writer"]`.
+- README: config rows for `reportFields`, `checksPassLine` and `spec`, and hooks rows for `implementer-report` and `spec-cap`.
+
 ## v0.4.3
 
 ### tether-web 0.1.0 (new)

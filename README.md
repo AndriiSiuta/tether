@@ -15,7 +15,7 @@ A Claude Code plugin marketplace with three plugins.
 From the project directory:
 
 ```
-claude plugin marketplace add AndriiSiuta/tether#v0.4.3
+claude plugin marketplace add AndriiSiuta/tether#v0.4.4
 claude plugin install tether@tether --scope local
 claude plugin install tether-nx@tether --scope local
 claude plugin install tether-web@tether --scope local
@@ -40,9 +40,9 @@ Estimates from `claude plugin details`; the real figure depends on the Claude Co
 
 | Plugin | Version | Maturity |
 |---|---|---|
-| `tether` | 0.4.3 | Used daily on a production Angular/Nx monorepo; 240+ tests. |
-| `tether-nx` | 0.3.0 | Rules only. The rules come from that same workspace; expect wording changes; rule ids are stable. |
-| `tether-web` | 0.1.0 | Early. The agents that plan, implement, review, check the UI and open the pull request; not yet verified on other repositories. Expect wording and report-format changes. |
+| `tether` | 0.4.4 | Used daily on a production Angular/Nx monorepo; 260+ tests. |
+| `tether-nx` | 0.3.1 | Rules only. The rules come from that same workspace; expect wording changes; rule ids are stable. |
+| `tether-web` | 0.2.0 | Early. The agents that plan, implement, review, check the UI and open the pull request; not yet verified on other repositories. Expect wording and report-format changes. |
 
 Issues and pull requests are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md). Changes are listed in [CHANGELOG.md](CHANGELOG.md).
 

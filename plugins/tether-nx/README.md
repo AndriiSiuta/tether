@@ -2,7 +2,7 @@
 
 A Claude Code plugin of rules for Angular and Nx workspaces: one app, per-domain libraries under `libs/<scope>/<name>`, route-scoped providers, signals over RxJS, SignalStore and PrimeNG usage, performance and accessibility. It ships skills only, as Markdown, with no agents, hooks or scripts. The agents that plan, implement and review against these rules live in the `tether-web` plugin from the same marketplace.
 
-> **Status: 0.3.0, early.** The rules are extracted from a production Angular/Nx workspace and have not yet been verified on other repositories. Rule ids are stable; wording may change. 0.3.0 moved the agents, the evals and four process skills to `tether-web`. Please open an issue when a rule does not fit your workspace.
+> **Status: 0.3.1, early.** The rules are extracted from a production Angular/Nx workspace and have not yet been verified on other repositories. Rule ids are stable; wording may change. 0.3.0 moved the agents, the evals and four process skills to `tether-web`. Please open an issue when a rule does not fit your workspace.
 
 ## What it is
 
@@ -26,7 +26,7 @@ Add `claude plugin install tether-web@tether --scope local` for the agents.
 From GitHub, pinned to a tag:
 
 ```
-claude plugin marketplace add AndriiSiuta/tether#v0.4.3
+claude plugin marketplace add AndriiSiuta/tether#v0.4.4
 claude plugin install tether-nx@tether --scope local
 ```
 

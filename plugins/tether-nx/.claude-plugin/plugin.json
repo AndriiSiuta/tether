@@ -1,6 +1,6 @@
 {
   "name": "tether-nx",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Angular and Nx rules for Claude Code agents: library layers, route-scoped providers, signals over RxJS, SignalStore and PrimeNG rules, performance and accessibility; the agents that apply them live in tether-web. A project overrides any rule in .claude/tether-nx.md.",
   "author": {
     "name": "Andrii Siuta"

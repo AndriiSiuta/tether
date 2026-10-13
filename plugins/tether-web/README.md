@@ -2,7 +2,7 @@
 
 A Claude Code plugin with the workflow for a web front end: ten agents and the process skills they preload, which take a ticket from investigation to an open pull request. The order is investigator → spec-writer → planner → plan-validator → implementers in waves → code-reviewer on every task, conventions-reviewer on a new shape → ui-checker → syncing-docs → pr-creator. Every handoff is a file or a fixed report shape: a spec with numbered decisions, a plan whose tasks carry `touches:`, `conflicts_with:`, `spec:` and `checks:` fields, implementer reports with fixed labels and the failing test that came first, and reviewer tables that end on a verdict line. The Angular and Nx rules the agents apply come from `tether-nx`; this plugin holds the process.
 
-> **Status: 0.1.0, early.** The agents come from a production Angular/Nx workspace and have not yet been verified on other repositories. Expect wording and report-format changes. Please open an issue when a step does not fit your workflow.
+> **Status: 0.2.0, early.** The agents come from a production Angular/Nx workspace and have not yet been verified on other repositories. Expect wording and report-format changes. Please open an issue when a step does not fit your workflow.
 
 ## Install
 
@@ -17,7 +17,7 @@ claude plugin install tether-web@tether --scope local
 From GitHub, pinned to a tag:
 
 ```
-claude plugin marketplace add AndriiSiuta/tether#v0.4.3
+claude plugin marketplace add AndriiSiuta/tether#v0.4.4
 claude plugin install tether-nx@tether --scope local
 claude plugin install tether-web@tether --scope local
 ```
@@ -127,14 +127,14 @@ Skills are referenced as `tether-web:<skill>`.
 | `constitution` | The non-negotiables a project will not relitigate, each with an id `CON-<n>`: where they live, how the planner, validator, implementers and reviewers apply them, and a default set in `references/default-constitution.md`. | original |
 | `testing-jest-spectator` | Jest specs with Spectator for components, services, stores, pipes and utils: factories, `data-testid` queries, fixtures by spread, stores through `TestBed`, `rxMethod` and `resource` in tests, what not to mock; recipes in `references/recipes.md`. | original |
 | `tailwind-tokens` | Tailwind 3 classes: scale tokens over arbitrary values, colour tokens by name, no fixed width or height on a layout box, two-column frames, when an arbitrary value is allowed. | original |
-| `ui-check-playwright-cli` | How the ui-checker drives `playwright-cli`: install, the `UI:` line grammar, open, navigate, assert, screenshot, and what to do when an assertion fails. | original |
+| `ui-check-playwright-cli` | How the ui-checker drives `playwright-cli`: the `UI:` line grammar, `scripts/ui-check.sh` for one text check with a screenshot, and what to do when an assertion fails. | original |
 | `syncing-docs` | Checking specs, plans, ADRs, the rules files and the follow-ups register against the code at the end of a branch. | original |
 
-No skill in 0.1.0 is vendored, so the plugin carries no third-party licence files.
+No skill in 0.2.0 is vendored, so the plugin carries no third-party licence files.
 
 ## Evals
 
-Six cases under [`evals/`](evals/), in Claude Code's `claude plugin eval` format (a `prompt.md`, a `case.yaml` and `graders/*.md` per case). Each case dispatches one agent against a small fixture workspace in the case's `workspace/` folder, over a neutral orders domain, and grades the result mostly with free regex and tool checks:
+Eight cases under [`evals/`](evals/), in Claude Code's `claude plugin eval` format (a `prompt.md`, a `case.yaml` and `graders/*.md` per case). Each case dispatches one agent against a small fixture workspace in the case's `workspace/` folder, over a neutral orders domain, and grades the result mostly with free regex and tool checks:
 
 | Case | Checks |
 |---|---|
@@ -144,8 +144,10 @@ Six cases under [`evals/`](evals/), in Claude Code's `claude plugin eval` format
 | `planner-task-headings` | The plan's tasks are headed `### Task <N>: [tag] <title>`, one tag each, at most 12. Needs `--allow-tools Write --scaffold`. |
 | `planner-task-fields` | Every `### Task` heading of the plan is followed by a fenced block carrying `touches:`, `conflicts_with:`, `spec:` and `checks:`, and the plan has `## Waves` and `## Shared files`. Needs `--allow-tools Write --scaffold`. |
 | `plan-validator-revises-on-unimplemented-decision` | For a spec with D1 to D3 and a plan whose tasks cite only D1 and D2, the validator returns the `Task \| Check \| Verdict \| Evidence` table, a row naming `D3`, and the final line `Verdict: Revise`. Needs `--scaffold`. |
+| `code-reviewer-flags-missing-decision` | For a brief with `spec: D1, D2` and a diff that builds D1, leaves D2 unbuilt and touches a template outside `touches:`, the review carries a `SPEC` row marking `D2` `missing`, a `SPEC extra` row graded `major`, and the final line `Verdict: fail`. Needs `--scaffold`. |
+| `spec-writer-stops-without-pattern-row` | For a ticket that needs a new store in a codebase with no store to copy, the spec lists the store's shape under open decisions and writes no `copies the shape of` path for it. Needs `--allow-tools Write --scaffold`. |
 
-The two reviewer cases carry the change inline in the brief and need no fixture read. The other four stage their fixture in the run's working directory with a `scaffold_script`, because the runner grants reads on an `add_dirs` folder but never tells the agent its path; run them with `--scaffold`.
+The two reviewer cases carry the change inline in the brief and need no fixture read. The other six stage their fixture in the run's working directory with a `scaffold_script`, because the runner grants reads on an `add_dirs` folder but never tells the agent its path; run them with `--scaffold`.
 
 Every run is a real model call on your account. From the repository root, a cheap single pass with no baseline arm:
 
