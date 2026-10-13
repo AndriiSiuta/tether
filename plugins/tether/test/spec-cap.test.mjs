@@ -125,3 +125,28 @@ test('today is the local calendar date', () => {
   assert.equal(localDate(new Date(2026, 0, 2, 0, 30)), '2026-01-02');
   assert.equal(localDate(new Date(2026, 11, 31, 23, 59)), '2026-12-31');
 });
+
+test('spec.agent as a list caps a spec by any listed agent', () => {
+  const config = { spec: { ...CONFIG.spec, agent: ['tether-web:spec-writer', 'spec-writer'] } };
+  const project = makeProject('list', config);
+  const path = writeSpec(project, `${TODAY}-big.md`, OVER);
+  for (const agent of ['tether-web:spec-writer', 'spec-writer']) {
+    const result = runCli(JSON.stringify(stop(`Wrote ${path}.`, project, agent)));
+    assert.equal(result.status, 2);
+    assert.match(result.stderr, /11 words/);
+  }
+});
+
+test('spec.agent as a list lets an unlisted agent through', () => {
+  const config = { spec: { ...CONFIG.spec, agent: ['tether-web:spec-writer', 'spec-writer'] } };
+  const project = makeProject('list-other', config);
+  const path = writeSpec(project, `${TODAY}-big.md`, OVER);
+  assert.equal(evaluate(stop(`Wrote ${path}.`, project, 'planner'), { root: project, config }, TODAY), null);
+});
+
+test('spec.agent as a string still caps only that agent', () => {
+  const project = makeProject('string');
+  const path = writeSpec(project, `${TODAY}-big.md`, OVER);
+  assert.match(evaluate(stop(`Wrote ${path}.`, project), { root: project, config: CONFIG }, TODAY), /11 words/);
+  assert.equal(evaluate(stop(`Wrote ${path}.`, project, 'tether-web:spec-writer'), { root: project, config: CONFIG }, TODAY), null);
+});

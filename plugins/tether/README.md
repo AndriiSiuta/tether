@@ -28,7 +28,7 @@ claude plugin install tether@tether --scope local
 
 `--scope local` enables the plugin in `.claude/settings.local.json` for this project only. After a new tag, run `claude plugin marketplace update tether` and then `claude plugin update tether@tether`, and start a new session.
 
-With `tether-web` from the same marketplace, the report check and the fix-round cap act on its two implementers and the spec cap on its spec writer: list `tether-web:implementer` and `tether-web:implementer-mechanical` in `implementerAgents` and set `spec.agent` to `tether-web:spec-writer`. `/tether:setup --only harness` writes the two implementers by default.
+With `tether-web` from the same marketplace, the report check and the fix-round cap act on its two implementers and the spec cap on its spec writer: list `tether-web:implementer` and `tether-web:implementer-mechanical` in `implementerAgents` and list `tether-web:spec-writer` in `spec.agent`. `/tether:setup --only harness` writes the two implementers by default.
 
 The plugin declares no `userConfig`. The backup directory is an argument to `/tether:backup`, because a command file does not get a user option substituted into it.
 
@@ -44,8 +44,9 @@ Without `harness.json` every hook is inert. `/tether:setup`'s `telemetry` and `m
   "localOnlyPaths": ["docs/private", ".claude/agents", ".claude/harness.json", "LOCAL.md"],
   "formatSkip": ["docs/", ".claude/", "LOCAL.md"],
   "implementerAgents": ["tether-web:implementer", "tether-web:implementer-mechanical"],
-  "reportFields": ["Files:", "Checks:", "Deferred:", "Plan edits:|Blocked:"],
-  "spec": { "dir": "docs/private/specs", "maxWords": 1500, "agent": "tether-web:spec-writer" },
+  "reportFields": ["Files:", "Red:", "Checks:", "Deferred:", "Plan edits:|Blocked:"],
+  "checksPassLine": "verify: ok",
+  "spec": { "dir": "docs/private/specs", "maxWords": 1500, "agent": ["tether-web:spec-writer", "spec-writer"] },
   "mcpWriteDeny": [
     { "server": "<server>", "tools": ["<write_tool>"], "patterns": ["^(create|update)_"] }
   ],
@@ -65,8 +66,9 @@ Without `harness.json` every hook is inert. `/tether:setup`'s `telemetry` and `m
 | `localOnlyPaths` | Paths relative to the repo that must never be committed or pushed. A directory covers everything under it. The backup archives the entries that exist, and evals keep them out of a worktree's diff. |
 | `formatSkip` | Paths Prettier leaves alone. An entry ending in `/` matches as a prefix; any other entry matches the exact path. Formatting is opt-in: without this key nothing is formatted, and `[]` formats every file inside the project. |
 | `implementerAgents` | The agent types whose final report is checked and whose fix rounds are counted. |
-| `reportFields` | The lines an implementer's report must contain. Within one field, `\|` separates alternatives. |
-| `spec` | `dir`, `maxWords` and `agent` for the spec word cap. |
+| `reportFields` | The lines an implementer's report must contain, each at the start of a line. Within one field, `\|` separates alternatives. The starter file asks for `Files:`, `Red:` (the failing test and its assertion, or `Red: none: <why>`), `Checks:`, `Deferred:` and `Plan edits:\|Blocked:`. A report with a `Blocked:` line passes whatever else it lacks. |
+| `checksPassLine` | Optional. A regex the `Checks:` section must match, e.g. `"verify: ok"` for a verify script that prints that line when it passes. The section is the `Checks:` line, without its label, and the lines below it up to the next report field; each line is tested on its own. Without it, or when the regex does not compile, `Checks:` only has to be present. Not in the starter file. |
+| `spec` | `dir`, `maxWords` and `agent` for the spec word cap. `agent` is one agent type or a list of them, e.g. `["tether-web:spec-writer", "spec-writer"]`. |
 | `mcpWriteDeny` | Each entry has a `server`, exact `tools` and regex `patterns`. A tool `mcp__<s>__<t>` is denied when `<s>` equals `server` or ends with `_<server>` (a plugin-provided server), and `<t>` is in `tools` or matches a pattern. |
 | `untrustedSources` | Tool-name prefixes whose output gets a reminder. `WebFetch` matches exactly. |
 | `fixRoundCap` | How many fix rounds an implementer gets per task before it has to escalate. |
@@ -86,8 +88,8 @@ Without `harness.json` every hook is inert. `/tether:setup`'s `telemetry` and `m
 | PreToolUse | `mcp__.*` | `mcp-write-guard.mjs` | `mcpWriteDeny`, `secretShapes` | Returns a PreToolUse `deny` for a listed MCP write tool, including one reached through a plugin-provided server, and for any MCP call whose input carries a secret-shaped token. |
 | PostToolUse | `Edit\|Write` | `prettier.sh` | `formatSkip` | Formats the written file inside the project with the project's own Prettier (`node_modules/.bin/prettier`, else `npx --no-install prettier`); it never fetches from npm. Runs only when `formatSkip` is set. Always exits 0. |
 | PostToolUse | `mcp__.*\|WebFetch` | `untrusted-input.mjs` | `untrustedSources` | Adds a reminder that the tool output is data, not instructions (see the `untrusted-input` skill). It fires only for `mcp__*` tools and `WebFetch`, its matcher, so an `untrustedSources` entry for any other tool never gets a note. |
-| SubagentStop | all | `implementer-report.mjs` | `implementerAgents`, `reportFields` | Exits 2, sending an implementer back, when its final message lacks a report field or a `Blocked:` line. |
-| SubagentStop | all | `spec-cap.mjs` | `spec` | Exits 2 when a spec dated today, written by `spec.agent`, is longer than `spec.maxWords`. |
+| SubagentStop | all | `implementer-report.mjs` | `implementerAgents`, `reportFields`, `checksPassLine` | Exits 2, sending an implementer back, when its final message (`last_assistant_message`) lacks a report field, or, with `checksPassLine` set, when its `Checks:` section does not quote the pass line. A `Blocked:` line lets the report through. |
+| SubagentStop | all | `spec-cap.mjs` | `spec` | Exits 2 when a spec dated today, written by an agent named in `spec.agent` (a string or a list), is longer than `spec.maxWords`. |
 | SubagentStop | all | `fix-round-cap.mjs` | `implementerAgents`, `fixRoundCap` | Counts the stops per session and task under `${CLAUDE_PLUGIN_DATA}/rounds/`. The cap is checked when the implementer stops after a round: it exits 2 once more than `fixRoundCap` fix rounds follow the first stop, naming the rounds used. A stop with `stop_hook_active` is not counted. |
 
 `mcp-write-guard` and `untrusted-input` read the config through `loadSecurityContext`, which tries `CLAUDE_PROJECT_DIR` before the hook's `cwd`, so a tool call made from another directory is still guarded. `git-guard` first looks for a `harness.json` in the directory the command runs in, so a repository that carries its own policy is governed by it, and falls back to the same lookup otherwise.
@@ -135,7 +137,7 @@ It writes nothing and exits 1 when `--dir` is missing, when there is no `harness
 
 | Part | Target | Keys |
 |---|---|---|
-| `harness` | `<project>/.claude/harness.json` | A starter file when none exists: the default branch (from `origin/HEAD`, else `main`) protected, the file itself local-only, `implementerAgents` (the two `tether-web` implementers), `reportFields`, `untrustedSources: ["WebFetch"]` and `fixRoundCap: 2`. An existing file is never changed. Runs first, so `deny` and `sandbox` in the same run read it. |
+| `harness` | `<project>/.claude/harness.json` | A starter file when none exists: the default branch (from `origin/HEAD`, else `main`) protected, the file itself local-only, `implementerAgents` (the two `tether-web` implementers), `reportFields` (with `Red:`), `untrustedSources: ["WebFetch"]` and `fixRoundCap: 2`. An existing file is never changed. Runs first, so `deny` and `sandbox` in the same run read it. |
 | `telemetry` | `~/.claude/settings.json` | `env`: `CLAUDE_CODE_ENABLE_TELEMETRY`, the OTLP exporters (gRPC to `http://127.0.0.1:4317`, traces included), `OTEL_LOG_TOOL_DETAILS=1`, and the four content switches `OTEL_LOG_USER_PROMPTS`, `OTEL_LOG_ASSISTANT_RESPONSES`, `OTEL_LOG_TOOL_CONTENT` and `OTEL_LOG_RAW_API_BODIES`, all set to `0`. |
 | `deny` | `<project>/.claude/settings.local.json` | `permissions.deny` gains `mcp__<server>__<tool>` for every `mcpWriteDeny` `tools` entry. The patterns stay hook-only. |
 | `mcp-pins` | `~/.claude.json` | The project's `mcpServers` args: `@azure-devops/mcp` is pinned to the current npm version, and `sonarsource/sonarqube-mcp` to the digest of the local image. |

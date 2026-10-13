@@ -18,7 +18,7 @@ export function harnessTemplate(defaultBranch) {
     protectedBranches: [defaultBranch],
     localOnlyPaths: ['.claude/harness.json'],
     implementerAgents: ['tether-web:implementer', 'tether-web:implementer-mechanical'],
-    reportFields: ['Files:', 'Checks:', 'Deferred:', 'Plan edits:|Blocked:'],
+    reportFields: ['Files:', 'Red:', 'Checks:', 'Deferred:', 'Plan edits:|Blocked:'],
     untrustedSources: ['WebFetch'],
     fixRoundCap: 2,
   };

@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { evaluate, missingFields } from '../scripts/implementer-report.mjs';
+import { harnessTemplate } from '../scripts/setup.mjs';
 
 const CLI = join(dirname(fileURLToPath(import.meta.url)), '..', 'scripts', 'implementer-report.mjs');
 const CONFIG = {
@@ -98,4 +99,59 @@ test('a continuation stop (stop_hook_active) is let through even with fields mis
   const result = runCli(JSON.stringify({ ...stop('Files: a.ts', project), stop_hook_active: true }));
   assert.equal(result.status, 0);
   assert.equal(result.stderr, '');
+});
+
+const PASS_CONFIG = { ...CONFIG, checksPassLine: 'verify: ok' };
+
+test('with checksPassLine, a Checks: line quoting the pass line passes', () => {
+  const report = 'Files: a.ts\nChecks: node verify.mjs, verify: ok\nDeferred: none\nPlan edits: none';
+  assert.equal(evaluate(stop(report, '/x'), PASS_CONFIG), null);
+});
+
+test('with checksPassLine, a Checks: line without the pass line exits 2 naming the expected line', () => {
+  const project = makeProject('no-pass-line', PASS_CONFIG);
+  const result = runCli(JSON.stringify(stop(FULL, project)));
+  assert.equal(result.status, 2);
+  assert.equal(
+    result.stderr,
+    'Checks: must quote the verify pass line, e.g. `verify: ok`. Run the verify command and paste its pass line, ' +
+      'or write Blocked: <what you need> if it does not pass.\n',
+  );
+});
+
+test('with checksPassLine, the pass line may sit on a line below Checks:, before the next field', () => {
+  const report = 'Files: a.ts\nChecks:\n- jest: 4 passed\n- verify: ok\nDeferred: none\nPlan edits: none';
+  assert.equal(evaluate(stop(report, '/x'), PASS_CONFIG), null);
+});
+
+test('with checksPassLine, the pass line outside the Checks: section does not count', () => {
+  const report = 'verify: ok\nFiles: a.ts\nChecks: skipped\nDeferred: verify: ok later\nPlan edits: none';
+  assert.match(evaluate(stop(report, '/x'), PASS_CONFIG), /^Checks: must quote the verify pass line/);
+});
+
+test('with checksPassLine, missing fields are reported first', () => {
+  assert.match(evaluate(stop('Files: a.ts', '/x'), PASS_CONFIG), /^Report is incomplete, missing Checks:/);
+});
+
+test('with checksPassLine, checksPassLine is a regex', () => {
+  const config = { ...CONFIG, checksPassLine: '^verify: ok$' };
+  const report = (checks) => `Files: a\nChecks: ${checks}\nDeferred: none\nPlan edits: none`;
+  assert.equal(evaluate(stop(report('ok\nverify: ok'), '/x'), config), null);
+  assert.notEqual(evaluate(stop(report('verify: okay'), '/x'), config), null);
+});
+
+test('with checksPassLine, a report that is only a Blocked: line passes', () => {
+  assert.equal(evaluate(stop('Blocked: verify fails on develop too', '/x'), PASS_CONFIG), null);
+});
+
+test('an invalid checksPassLine regex is ignored', () => {
+  assert.equal(evaluate(stop(FULL, '/x'), { ...CONFIG, checksPassLine: '(' }), null);
+});
+
+test('the starter reportFields require Red:, and Red: none: <why> satisfies it', () => {
+  const config = { ...CONFIG, reportFields: harnessTemplate('main').reportFields };
+  assert.deepEqual(missingFields(FULL, config.reportFields), ['Red:']);
+  assert.equal(evaluate(stop(`${FULL}\nRed: none: config only`, '/x'), config), null);
+  assert.equal(evaluate(stop(`${FULL}\nRed: a.spec.ts "drops nullish rows" expected [] got [null]`, '/x'), config), null);
+  assert.equal(evaluate(stop('Blocked: no seam agreed', '/x'), config), null);
 });

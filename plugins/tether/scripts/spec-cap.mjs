@@ -1,4 +1,4 @@
-// SubagentStop: for the harness.json spec.agent, a spec under spec.dir dated today and named in the final message is capped at spec.maxWords.
+// SubagentStop: for the harness.json spec.agent (one agent type or a list of them), a spec under spec.dir dated today and named in the final message is capped at spec.maxWords.
 // Older-dated specs the run only amended are exempt; paths resolve against the folder whose harness.json was read.
 // Exit 2 with one stderr paragraph sends the agent back; exit 0 otherwise, on stop_hook_active, malformed stdin, a missing field or no harness.json.
 import { readFileSync } from 'node:fs';
@@ -19,7 +19,9 @@ export function evaluate(input, { root, config }, today = localDate()) {
   const spec = config.spec;
   const message = input?.last_assistant_message;
   if (input?.stop_hook_active === true) return null;
-  if (spec === null || typeof spec !== 'object' || input?.agent_type !== spec.agent || typeof message !== 'string') return null;
+  if (spec === null || typeof spec !== 'object' || typeof message !== 'string') return null;
+  const agents = Array.isArray(spec.agent) ? spec.agent : [spec.agent];
+  if (typeof input?.agent_type !== 'string' || !agents.includes(input.agent_type)) return null;
   if (typeof spec.dir !== 'string' || !Number.isFinite(spec.maxWords)) return null;
   const CAP = spec.maxWords;
   const over = [];
