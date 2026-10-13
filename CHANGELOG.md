@@ -2,7 +2,7 @@
 
 All notable changes to the `tether` marketplace and its plugins. Versions follow the plugins' `version` fields; tags cover the whole repository.
 
-## Unreleased
+## v0.4.4
 
 ### tether-web 0.2.0
 - `code-reviewer` checks spec conformance per task: one `SPEC D<n>` row per decision in the brief's `spec:` field (`met` with `path:line`, `missing`, or `extra`). An `extra` outside `touches:` is `major`; a missing decision or a major extra fails the verdict. A brief without `spec:` gets one `SPEC: no decisions in brief` row.
