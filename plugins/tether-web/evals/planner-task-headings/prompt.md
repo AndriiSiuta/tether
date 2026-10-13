@@ -1,4 +1,5 @@
 ---
+plugins: ["../..", "../../../tether-nx"]
 description: The planner writes a plan whose tasks use the tagged heading shape and stay within the task cap.
 expected_outcome: 'The file docs/plans/order-status-filter.md exists, each task heading reads ### Task N, a colon, one bracketed tag and a title, and there are at most 12 tasks.'
 tags: [planner]

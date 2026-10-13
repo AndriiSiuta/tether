@@ -6,5 +6,5 @@
     "name": "Andrii Siuta"
   },
   "license": "MIT",
-  "dependencies": ["tether-nx", "nx@nx-claude-plugins"]
+  "dependencies": ["tether-nx"]
 }

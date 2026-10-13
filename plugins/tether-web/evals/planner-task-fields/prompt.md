@@ -1,4 +1,5 @@
 ---
+plugins: ["../..", "../../../tether-nx"]
 description: The planner gives every task the touches, conflicts_with, spec and checks field block and writes the Waves and Shared files sections.
 expected_outcome: 'The file docs/plans/order-status-filter.md exists; every ### Task heading is followed by a fenced block carrying touches:, conflicts_with:, spec: and checks:; the plan has a ## Waves section and a ## Shared files section.'
 tags: [planner]

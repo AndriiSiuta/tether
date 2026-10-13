@@ -1,4 +1,5 @@
 ---
+plugins: ["../..", "../../../tether-nx"]
 description: The plan validator returns Revise when a spec decision is cited by no task.
 expected_outcome: 'The returned table has the columns Task, Check, Verdict and Evidence, has a row naming D3 as cited by no task, and the final line is Verdict: Revise.'
 tags: [smoke, plan-validator]

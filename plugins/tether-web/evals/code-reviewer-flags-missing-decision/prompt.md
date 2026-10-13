@@ -1,4 +1,5 @@
 ---
+plugins: ["../..", "../../../tether-nx"]
 description: The code reviewer marks a cited decision the change does not implement as missing and an edit outside touches as a major extra.
 expected_outcome: 'The returned table has a SPEC row marking D2 missing and a SPEC extra row of severity major for order-list.component.html, which lies outside touches; the final line is `Verdict: fail` and no `Verdict: pass` appears.'
 tags: [smoke, code-reviewer]

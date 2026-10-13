@@ -1,4 +1,5 @@
 ---
+plugins: ["../..", "../../../tether-nx"]
 description: The spec-writer leaves the shape of a new store as an open decision when the codebase has no store to copy, instead of inventing one.
 expected_outcome: 'No spec written under docs/specs names an existing file as the shape the new drafts store copies (no "copies the shape of" path and no Placement table row for the store ending in a libs/ path); the returned report lists, under its open decisions, a question about which existing store or pattern the new store copies.'
 tags: [spec-writer]

@@ -1,4 +1,5 @@
 ---
+plugins: ["../..", "../../../tether-nx"]
 description: The conventions reviewer fails the row for a domain service registered with providedIn root.
 expected_outcome: 'The returned table has the columns Rule, Verdict and Evidence, marks the DI-2 row fail with order-export.service.ts as its evidence; the final line is `Verdict: fail` and no `Verdict: pass` appears.'
 tags: [smoke, conventions-reviewer]

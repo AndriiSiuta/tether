@@ -1,4 +1,5 @@
 ---
+plugins: ["../..", "../../../tether-nx"]
 description: The implementer stops with a Blocked line when the brief leaves placement open, instead of guessing a folder.
 expected_outcome: No file written; the implementer's report ends with a Blocked line that asks where the new code goes, which file it copies or what provider scope it gets.
 tags: [smoke, implementer]
