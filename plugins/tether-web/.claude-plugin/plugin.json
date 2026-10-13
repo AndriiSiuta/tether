@@ -1,0 +1,10 @@
+{
+  "name": "tether-web",
+  "version": "0.1.0",
+  "description": "Workflow agents and process skills for a web front end: investigator, spec-writer, planner, plan-validator, implementers, two reviewers, ui-checker and pr-creator, driven by a per-project .claude/tether-web.md rules file.",
+  "author": {
+    "name": "Andrii Siuta"
+  },
+  "license": "MIT",
+  "dependencies": ["tether-nx", "nx@nx-claude-plugins"]
+}
