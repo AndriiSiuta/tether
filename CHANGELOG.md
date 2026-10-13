@@ -9,7 +9,7 @@ All notable changes to the `tether` marketplace and its plugins. Versions follow
 - Agents: `investigator` (inherit, effort high), `spec-writer` (inherit, effort medium), `planner` (inherit, effort high), `plan-validator` (sonnet, new), `implementer` (opus), `implementer-mechanical` (opus), `conventions-reviewer` (sonnet), `code-reviewer` (opus), `ui-checker` (sonnet, new) and `pr-creator` (sonnet, new).
 - The two reviewers replace the `tether-nx` reviewer's `conventions` and `pairings` modes; every finding row carries `path:line` evidence.
 - The planner writes `touches:`, `conflicts_with:`, `spec:` and `checks:` under every task heading, a `## Shared files` list and a `## Waves` section; the spec-writer writes a numbered `## Decisions` list the planner and the validator cite.
-- Skills: `investigating-codebase`, `writing-feature-spec`, `writing-adr` and `drawing-architecture-diagrams` (moved from `tether-nx`), and new `constitution`, `testing-jest-spectator`, `e2e-playwright`, `ui-check-playwright-cli`, `frontend-design`, `tailwind-tokens` and `syncing-docs`.
+- Skills: `investigating-codebase`, `writing-feature-spec`, `writing-adr` and `drawing-architecture-diagrams` (moved from `tether-nx`), and new `constitution`, `testing-jest-spectator`, `ui-check-playwright-cli`, `tailwind-tokens` and `syncing-docs`. The vendored `e2e-playwright` and `frontend-design` skills follow in a later release.
 - A project sets `tracker`, `pr`, `preview`, `verify`, `paths`, `models`, `constitution` and `facts` in `.claude/tether-web.md`; without the file the defaults apply, and `verify` and `paths` fall back to `.claude/tether-nx.md`.
 - The eval cases moved from `tether-nx`: the two reviewer cases are renamed for `conventions-reviewer`, `implementer-blocks-on-open-placement` and `planner-task-headings` are unchanged, and `reviewer-without-mode-is-blocked` is deleted, since no agent has modes. Two cases are still to come: `planner-task-fields` and `plan-validator-revises-on-unimplemented-decision`.
 
@@ -25,7 +25,9 @@ All notable changes to the `tether` marketplace and its plugins. Versions follow
 ### Repository
 - The marketplace lists `tether-web` and sets `allowCrossMarketplaceDependenciesOn: ["nx-claude-plugins"]`; the `tether-nx` entry describes it as rules only.
 - `test/frontmatter.test.mjs` accepts an agent's skill preload from a plugin named in its plugin's `dependencies`, and checks that the skill folder exists there.
-- The neutrality scope allowlist accepts the `playwright` npm scope.
+- The neutrality scope allowlist accepts the `playwright`, `ngneat` and `angular-architects` npm scopes.
+- The rules-file sentence check keys on the plugin: `tether-nx` and `tether-web` each carry their own sentence exactly once in every agent and skill.
+- Two eval cases for `tether-web`: `planner-task-fields` and `plan-validator-revises-on-unimplemented-decision`; the reviewer cases grade the `Verdict: fail` line.
 - Root README: three plugins, `tether-web` marked Early, the install snippet installs all three.
 
 ## v0.4.2
