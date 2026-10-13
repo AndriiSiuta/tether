@@ -2,6 +2,19 @@
 
 Imports are left out: Spectator's helpers (`createComponentFactory`, `createHostFactory`, `createServiceFactory`, `mockProvider`, `byTestId`, `Spectator`) come from `@ngneat/spectator/jest`, `TestBed` from `@angular/core/testing`, the fixtures from the owning lib's barrel (`@org/orders/data-access`).
 
+## Contents
+
+- §1 [A fixture file](#1-a-fixture-file)
+- §2 [A component with inputs](#2-a-component-with-inputs)
+- §3 [Content projection through a host](#3-content-projection-through-a-host)
+- §4 [A heavy child swapped for a stub](#4-a-heavy-child-swapped-for-a-stub)
+- §5 [A service with a mocked edge](#5-a-service-with-a-mocked-edge)
+- §6 [A signal store with an rxMethod](#6-a-signal-store-with-an-rxmethod)
+- §7 [A resource](#7-a-resource)
+- §8 [HTTP at the boundary](#8-http-at-the-boundary)
+- §9 [A debounced search](#9-a-debounced-search)
+- §10 [A dialog and a navigation](#10-a-dialog-and-a-navigation)
+
 ## 1. A fixture file
 
 `libs/orders/data-access/src/lib/testing/order.fixtures.ts`, exported from the lib's barrel:
