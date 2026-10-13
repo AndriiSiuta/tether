@@ -1,13 +1,13 @@
 ---
 name: ui-check-playwright-cli
-description: Use when a brief or an implementer report lists UI checks (`UI:` lines) against a running preview app - a route that must show a text, a variant that must render an element, an end-of-branch click-through that would otherwise be done by hand. How to drive playwright-cli for it - install, the check-line grammar, the open, navigate, assert, screenshot loop, where screenshots go, and what to do when an assertion fails.
+description: Use when a brief or an implementer report lists UI checks (`UI:` lines) against a running preview app - a route that must show a text, a variant that must render an element, an end-of-branch click-through that would otherwise be done by hand.
 ---
 
 # UI checks with playwright-cli
 
 Read `.claude/tether-web.md` first; where it differs from this file, it wins. `preview` is the base URL; `paths.reports` (fallback `.claude/tether-nx.md`, default `docs/reports`) holds the screenshots.
 
-Every command and flag below is quoted from the README at https://github.com/microsoft/playwright-cli, read 2026-10-13. For anything else run `playwright-cli --help` first; never guess a flag.
+Commands come from https://github.com/microsoft/playwright-cli; run `playwright-cli --help` for their flags, never guess one.
 
 ## Install
 
@@ -32,24 +32,20 @@ A line that does not fit is reported `unparsed`, never interpreted.
 
 ## The loop
 
-One session for the whole run, headless (the default; no `--headed` in an agent run).
+One session per check, headless (the default; no `--headed` in an agent run).
+
+A text check is one run of the script in this skill's folder (`scripts/ui-check.sh --help` gives the arguments and exit codes):
 
 ```
-playwright-cli open [url]               # open browser, optionally navigate to url
-playwright-cli goto <url>               # navigate to a url
-playwright-cli snapshot                 # capture page snapshot to obtain element ref
-playwright-cli find <text>              # search the snapshot for text, returns matching nodes
-playwright-cli screenshot --filename=f  # save screenshot with specific filename
-playwright-cli close                    # close the page
+scripts/ui-check.sh <preview> <route> "<text>" <out.png>
 ```
 
-Per check: `goto <preview><route>`, `snapshot`, assert, screenshot.
+It opens the preview, goes to the route, asserts the text with one fresh-snapshot retry, screenshots the whole page pass or fail, and closes. Exit 0 is `pass`; 1 is `fail`, and the screenshot tells what the page showed instead; 3 is `Blocked:` (playwright-cli missing or the preview down).
 
-- **Text:** `find "<text>"` returns a node; for a count or a date, `find --regex <pattern>`.
+An element check or a check with an action runs the same steps by hand: `goto`, `snapshot`, assert, `screenshot`. Run `playwright-cli --help` for the commands (`click`, `fill`, `find --regex` for a count or a date) and their arguments.
+
 - **Element:** the snapshot shows a node of that role and name. Refs such as `e21` change between snapshots; never reuse one.
-- **Action:** the README lists `click` and `fill` (`fill <ref> <text>`); take the ref from the latest snapshot, check `--help` for arguments, snapshot again before asserting.
-
-Screenshot pass or fail, whole page (`screenshot [ref]` takes one element only when a ref is given).
+- **Action:** take the ref from the latest snapshot, act, snapshot again before asserting.
 
 ## Where screenshots go
 
@@ -73,13 +69,7 @@ UI: /invoices/acme-1042 shows "Invoice paid"
 With `preview` = `http://localhost:4300`:
 
 ```
-mkdir -p docs/reports/ui/2026-10-13-invoice-status
-playwright-cli open http://localhost:4300
-playwright-cli goto http://localhost:4300/invoices/acme-1042
-playwright-cli snapshot
-playwright-cli find "Invoice paid"
-playwright-cli screenshot --filename=docs/reports/ui/2026-10-13-invoice-status/1.png
-playwright-cli close
+scripts/ui-check.sh http://localhost:4300 /invoices/acme-1042 "Invoice paid" docs/reports/ui/2026-10-13-invoice-status/1.png
 ```
 
 | Check | Result | Screenshot |
