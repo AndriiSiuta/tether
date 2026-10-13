@@ -1,6 +1,6 @@
 ---
 type: regex
 target: trace
-pattern: 'DI-2`[^|]*\|\s*\**fail'
+pattern: 'FEAT-3`?[^|]*\|\s*\**[Ff]ail'
 weight: 2
 ---

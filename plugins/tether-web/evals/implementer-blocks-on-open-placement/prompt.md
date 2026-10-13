@@ -7,12 +7,12 @@ timeout_seconds: 600
 allowed_tools: [Agent, Read, Glob, Grep]
 ---
 
-Dispatch the `tether-nx:implementer` agent with the brief between BEGIN BRIEF and END BRIEF, word for word, and then reply with its report, unchanged.
+Dispatch the `tether-web:implementer` agent with the brief between BEGIN BRIEF and END BRIEF, word for word, and then reply with its report, unchanged.
 
 BEGIN BRIEF
 # Task 3: Export the order list as CSV
 
-The codebase is the current working directory (`libs/`, `apps/`, `tsconfig.base.json`). Base commit: none (no git history). There is no `.claude/tether-nx.md`, so the defaults apply.
+The codebase is the current working directory (`libs/`, `apps/`, `tsconfig.base.json`). Base commit: none (no git history). There is no `.claude/tether-web.md` and no `.claude/tether-nx.md`, so the defaults apply.
 
 Add an "Export CSV" button to the order list that downloads the visible orders as a CSV file. Add a service that builds the CSV text from the orders.
 END BRIEF

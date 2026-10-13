@@ -1,16 +1,15 @@
 ---
-description: The reviewer in conventions mode fails the row for a feature library that imports another feature library.
-expected_outcome: The returned table marks the FEAT-3 row fail and names invoice-list.component.ts; the verdict is not a plain approve.
-tags: [smoke, reviewer]
+description: The conventions reviewer fails the row for a feature library that imports another feature library.
+expected_outcome: The returned table has the columns Rule, Verdict and Evidence, marks the FEAT-3 row fail with invoice-list.component.ts as its evidence; the verdict is not a plain approve.
+tags: [smoke, conventions-reviewer]
 max_turns: 15
 timeout_seconds: 600
 allowed_tools: [Agent, Read, Glob, Grep]
 ---
 
-Dispatch the `tether-nx:reviewer` agent with the brief between BEGIN BRIEF and END BRIEF, word for word, and then reply with the review it returns, unchanged.
+Dispatch the `tether-web:conventions-reviewer` agent with the brief between BEGIN BRIEF and END BRIEF, word for word, and then reply with the review it returns, unchanged.
 
 BEGIN BRIEF
-Mode: conventions
 Review the change below. The workspace is the read-only `workspace` directory added to this session; it has no git history, so the change is given as a diff, and the files after the change are in the workspace. There is no verify command output for this change.
 
 ```diff

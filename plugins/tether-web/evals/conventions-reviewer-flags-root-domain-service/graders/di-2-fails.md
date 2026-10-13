@@ -1,6 +1,6 @@
 ---
 type: regex
 target: trace
-pattern: 'Blocked: name the mode'
+pattern: 'DI-2`?[^|]*\|\s*\**[Ff]ail'
 weight: 2
 ---

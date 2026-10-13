@@ -1,4 +1,4 @@
 schema_version: "1.1"
-name: reviewer-flags-root-domain-service
+name: conventions-reviewer-flags-feature-import
 context:
   add_dirs: [workspace]
