@@ -48,7 +48,7 @@ Attribute order, self-closing tags, class sorting and control flow belong to lin
 
 ## Before you report a task done
 
-- `grep -nE 'w-\[|h-\[|min-w-\[|max-w-\[|\b[wh]-[0-9]+\b|#[0-9a-fA-F]{3,6}' <touched .html files>` prints only thumbnails and icons.
+- Run this skill's `scripts/check-sizes.sh <touched .html files>`: every line it prints is a thumbnail or an icon (exit 1 with only those is a pass); anything else is fixed first.
 - Every arbitrary value left has no close token and a sibling that uses it.
 - The page is checked at a width below `xl`: the columns stack, nothing scrolls sideways.
 
