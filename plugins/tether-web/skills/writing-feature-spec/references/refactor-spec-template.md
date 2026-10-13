@@ -10,7 +10,7 @@ Two or three sentences: what is wrong or missing today, and what is true when th
 
 ## Inventory
 
-One row per unit the work touches: a library, a component, a file family. The table is the scope; a unit not in it is out of scope. For a component, point at its design link and its reference implementation instead of restating them.
+One row per unit the work touches: a library, a component, a file family. The table is the scope; a unit not in it is out of scope. For a component, point at its design link and its reference implementation instead of restating them. A new store, service or component says in its After cell "copies the shape of `<existing file>`", a real path in the repo; when no existing file fits, it goes under Open decisions instead, and the brainstorm runs again before planning.
 
 | Unit | Today | After | Source |
 |---|---|---|---|

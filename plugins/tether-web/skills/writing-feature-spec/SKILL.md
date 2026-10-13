@@ -26,6 +26,8 @@ Whether the file is committed is the project's choice, stated in the rules file'
 
 Caps: 1,500 words in total, tables and type blocks included; tether's spec-cap hook enforces it when the project configures it. A large batch of components is split into several specs, each component pointing at its design link and its reference implementation instead of restating them. A refactor, a migration or a component wave uses `references/refactor-spec-template.md` instead of the feature template. Copy strings quoted exactly as they will render.
 
+A filled example: `examples/good-spec.md`.
+
 ## Rules
 
 - **Decisions only.** A choice the brainstorm did not make goes under `## Open decisions` as a question, never chosen silently in the prose.
@@ -33,7 +35,7 @@ Caps: 1,500 words in total, tables and type blocks included; tether's spec-cap h
 - **Write the copy strings first.** The table has a key column plus one column per language in the rules file's `i18n` (for example `en`, `de`); it forces the decisions, and a feature with an empty language column is not specced (`COPY-1`). Keys follow the project's translation-key convention.
 - **Amend by appending.** When a change alters an earlier spec, say "amends `<path>` §n" in the new spec's header and add a dated entry under `## Amendments` at the end of the earlier file giving the replacement row; the earlier body is never rewritten, and there is no second spec about the same screen.
 - **Name the backend contract.** Say which endpoint already serves the data and which fields the client model keeps, or say plainly that the backend must add it and the work is blocked.
-- **Placement is a decision.** Name the library, the slice, where state lives, the provider scope and the feature flag that gates the feature, if any, by rule id where one exists.
+- **Placement is a decision.** Name the library, the slice, where state lives, the provider scope and the feature flag that gates the feature, if any, by rule id where one exists. Every new store, service or component names the existing file whose shape it copies; when none fits, that is an open decision, not prose, and the brainstorm runs again before planning.
 - **More than three open decisions means the brainstorm is not finished.** Go back rather than writing them all down.
 
 ## Steps

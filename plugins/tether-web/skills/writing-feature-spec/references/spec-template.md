@@ -39,6 +39,12 @@ State plainly: served today / must be added by the backend (with its ticket, if 
 
 By rule id where one exists: the library and its `type:` (`NX-1`, `NX-3`); the slice the work lands in (`FEAT-1`); where state lives — an existing store, a signal service or component state (`SIG-4`); the provider scope (`DI-1`, `DI-2`); the feature flag that gates it, if any, and its key. Anything new in a shared library needs a reason and the library whose `type:` fits.
 
+One row per new store, service or component, mandatory: the existing file in the repo whose shape it copies. When no existing file fits, the row is not written; the file goes under Open decisions instead, and the brainstorm runs again before planning.
+
+| New file | Library and folder | Copies the shape of |
+|---|---|---|
+| `order-export.store.ts` | `@org/orders-data-access`, `store/` | `libs/orders/data-access/src/lib/store/orders.store.ts` |
+
 ## Tests
 
 One line per acceptance criterion naming the spec file that will prove it (`TEST-1`). Pure functions get their own spec; a container spec covers the wiring. Say which existing specs change because a dependency was added.
