@@ -28,6 +28,8 @@ claude plugin install tether@tether --scope local
 
 `--scope local` enables the plugin in `.claude/settings.local.json` for this project only. After a new tag, run `claude plugin marketplace update tether` and then `claude plugin update tether@tether`, and start a new session.
 
+With `tether-web` from the same marketplace, the report check and the fix-round cap act on its two implementers and the spec cap on its spec writer: list `tether-web:implementer` and `tether-web:implementer-mechanical` in `implementerAgents` and set `spec.agent` to `tether-web:spec-writer`. `/tether:setup --only harness` writes the two implementers by default.
+
 The plugin declares no `userConfig`. The backup directory is an argument to `/tether:backup`, because a command file does not get a user option substituted into it.
 
 ## `.claude/harness.json`
@@ -41,9 +43,9 @@ Without `harness.json` every hook is inert. `/tether:setup`'s `telemetry` and `m
   "protectedBranches": ["main"],
   "localOnlyPaths": ["docs/private", ".claude/agents", ".claude/harness.json", "LOCAL.md"],
   "formatSkip": ["docs/", ".claude/", "LOCAL.md"],
-  "implementerAgents": ["implementer"],
+  "implementerAgents": ["tether-web:implementer", "tether-web:implementer-mechanical"],
   "reportFields": ["Files:", "Checks:", "Deferred:", "Plan edits:|Blocked:"],
-  "spec": { "dir": "docs/private/specs", "maxWords": 1500, "agent": "spec-writer" },
+  "spec": { "dir": "docs/private/specs", "maxWords": 1500, "agent": "tether-web:spec-writer" },
   "mcpWriteDeny": [
     { "server": "<server>", "tools": ["<write_tool>"], "patterns": ["^(create|update)_"] }
   ],
@@ -133,7 +135,7 @@ It writes nothing and exits 1 when `--dir` is missing, when there is no `harness
 
 | Part | Target | Keys |
 |---|---|---|
-| `harness` | `<project>/.claude/harness.json` | A starter file when none exists: the default branch (from `origin/HEAD`, else `main`) protected, the file itself local-only, `implementerAgents`, `reportFields`, `untrustedSources: ["WebFetch"]` and `fixRoundCap: 2`. An existing file is never changed. Runs first, so `deny` and `sandbox` in the same run read it. |
+| `harness` | `<project>/.claude/harness.json` | A starter file when none exists: the default branch (from `origin/HEAD`, else `main`) protected, the file itself local-only, `implementerAgents` (the two `tether-web` implementers), `reportFields`, `untrustedSources: ["WebFetch"]` and `fixRoundCap: 2`. An existing file is never changed. Runs first, so `deny` and `sandbox` in the same run read it. |
 | `telemetry` | `~/.claude/settings.json` | `env`: `CLAUDE_CODE_ENABLE_TELEMETRY`, the OTLP exporters (gRPC to `http://127.0.0.1:4317`, traces included), `OTEL_LOG_TOOL_DETAILS=1`, and the four content switches `OTEL_LOG_USER_PROMPTS`, `OTEL_LOG_ASSISTANT_RESPONSES`, `OTEL_LOG_TOOL_CONTENT` and `OTEL_LOG_RAW_API_BODIES`, all set to `0`. |
 | `deny` | `<project>/.claude/settings.local.json` | `permissions.deny` gains `mcp__<server>__<tool>` for every `mcpWriteDeny` `tools` entry. The patterns stay hook-only. |
 | `mcp-pins` | `~/.claude.json` | The project's `mcpServers` args: `@azure-devops/mcp` is pinned to the current npm version, and `sonarsource/sonarqube-mcp` to the digest of the local image. |
