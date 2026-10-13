@@ -9,7 +9,7 @@ Read `.claude/tether-web.md` first; where it differs from this file, it wins.
 
 ## Overview
 
-One spec beside the file it tests, one `it` per behaviour, each failing without its change (`CON-8`). Spectator builds the unit, fixtures build the data, and only the edge (network, persistence, dialogs, router) is replaced. Recipes with full code: `references/recipes.md`. Spectator's helpers come from its `jest` entry point; Angular's from `@angular/core/testing`.
+One spec beside the file it tests, one `it` per behaviour, each failing without its change (`CON-8`). Spectator builds the unit, fixtures build the data, and only the edge (network, persistence, dialogs, router) is replaced. Recipes with full code: `references/recipes.md`. Spectator's helpers come from `@ngneat/spectator/jest`; Angular's from `@angular/core/testing`.
 
 ## The recipe
 

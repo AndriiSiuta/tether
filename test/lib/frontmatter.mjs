@@ -2,8 +2,11 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { basename, dirname, join, relative, resolve } from 'node:path';
 
-export const RULES_SENTENCE = 'Read `.claude/tether-nx.md` first; where it differs from this file, it wins.';
-export const SENTENCE_PLUGIN = 'tether-nx';
+export const RULES_SENTENCES = {
+  'tether-nx': 'Read `.claude/tether-nx.md` first; where it differs from this file, it wins.',
+  'tether-web': 'Read `.claude/tether-web.md` first; where it differs from this file, it wins.',
+};
+export const RULES_SENTENCE = RULES_SENTENCES['tether-nx'];
 
 const KEY_LINE = /^([A-Za-z_][\w-]*):(?:\s+(.*))?$/;
 const LIST_ITEM = /^\s+-\s+(.*)$/;
@@ -83,9 +86,10 @@ function checkCommon({ rel, parsed, expectedName, kind, plugin }) {
   if (isEmpty(name)) findings.push(`${rel}: missing frontmatter name`);
   else if (name !== expectedName) findings.push(`${rel}: ${kind} name "${name}" does not match "${expectedName}"`);
   if (isEmpty(description)) findings.push(`${rel}: missing or empty frontmatter description`);
-  if (plugin === SENTENCE_PLUGIN) {
-    const count = parsed.body.split(RULES_SENTENCE).length - 1;
-    if (count === 0) findings.push(`${rel}: missing the rules-file sentence: ${RULES_SENTENCE}`);
+  const sentence = Object.hasOwn(RULES_SENTENCES, plugin) ? RULES_SENTENCES[plugin] : undefined;
+  if (sentence !== undefined) {
+    const count = parsed.body.split(sentence).length - 1;
+    if (count === 0) findings.push(`${rel}: missing the rules-file sentence: ${sentence}`);
     else if (count > 1) findings.push(`${rel}: the rules-file sentence occurs ${count} times, not once`);
   }
   return findings;

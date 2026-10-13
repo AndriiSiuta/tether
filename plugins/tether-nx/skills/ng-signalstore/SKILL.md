@@ -34,7 +34,7 @@ Every request a store makes follows one shape:
 
 - The method is an `rxMethod`, so a caller passes a value or a signal and gets nothing back to subscribe to.
 - The request is wrapped in `tapResponse` (from `@ngrx/operators`), which handles `next` and `error` and keeps the stream alive after an error.
-- Loading and error live in a call-state feature: `withCallState` from the NgRx toolkit, or a project `signalStoreFeature` with the same shape (`isLoading`, `isLoaded`, `error`). A component reads those signals; it never tracks its own `loading` flag for a store request.
+- Loading and error live in a call-state feature: `withCallState` from `@angular-architects/ngrx-toolkit`, or a project `signalStoreFeature` with the same shape (`isLoading`, `isLoaded`, `error`). A component reads those signals; it never tracks its own `loading` flag for a store request.
 - No store method returns an Observable or a Promise. A component that needs to act after the request reads the store's signals in a `computed` or an `effect`.
 - No injection token that swaps the store for a fake one in a preview or a demo page. A preview provides the real store with a fake API service behind it, so the page runs the same code the app runs.
 

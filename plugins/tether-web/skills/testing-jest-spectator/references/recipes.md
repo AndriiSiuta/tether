@@ -1,6 +1,6 @@
 # Recipes
 
-Imports are left out: Spectator's helpers (`createComponentFactory`, `createHostFactory`, `createServiceFactory`, `mockProvider`, `byTestId`, `Spectator`) come from its `jest` entry point, `TestBed` from `@angular/core/testing`, the fixtures from the owning lib's barrel (`@org/orders/data-access`).
+Imports are left out: Spectator's helpers (`createComponentFactory`, `createHostFactory`, `createServiceFactory`, `mockProvider`, `byTestId`, `Spectator`) come from `@ngneat/spectator/jest`, `TestBed` from `@angular/core/testing`, the fixtures from the owning lib's barrel (`@org/orders/data-access`).
 
 ## 1. A fixture file
 

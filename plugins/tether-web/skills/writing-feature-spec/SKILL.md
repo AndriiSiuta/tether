@@ -5,7 +5,7 @@ description: Use when a brainstorm has converged and a ticket or request needs i
 
 # Writing a feature spec
 
-Read `.claude/tether-nx.md` first; where it differs from this file, it wins.
+Read `.claude/tether-web.md` first; where it differs from this file, it wins.
 
 ## Overview
 

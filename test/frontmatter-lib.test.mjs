@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { RULES_SENTENCE, checkPlugins, parseFrontmatter } from './lib/frontmatter.mjs';
+import { RULES_SENTENCE, RULES_SENTENCES, checkPlugins, parseFrontmatter } from './lib/frontmatter.mjs';
 
 function tree(files) {
   const root = mkdtempSync(join(tmpdir(), 'tether-'));
@@ -22,9 +22,11 @@ function skill(name, body = 'Use it.', extra = '') {
   return doc(`name: ${name}\ndescription: Use when testing.${extra}`, `# ${name}\n\n${RULES_SENTENCE}\n\n${body}`);
 }
 
-function agent(name, front = '', body = 'Do the task.') {
-  return doc(`name: ${name}\ndescription: Use when testing.${front}`, `${RULES_SENTENCE}\n\n${body}`);
+function agent(name, front = '', body = 'Do the task.', sentence = RULES_SENTENCE) {
+  return doc(`name: ${name}\ndescription: Use when testing.${front}`, `${sentence}\n\n${body}`);
 }
+
+const WEB_SENTENCE = RULES_SENTENCES['tether-web'];
 
 function good() {
   return {
@@ -111,7 +113,7 @@ test('an agent skills entry naming another plugin is reported', () => {
 test('an agent skills entry naming a dependency plugin resolves against that plugin', () => {
   const result = findings({
     'plugins/tether-web/.claude-plugin/plugin.json': JSON.stringify({ name: 'tether-web', dependencies: ['tether-nx', 'nx@nx-claude-plugins'] }),
-    'plugins/tether-web/agents/worker.md': agent('worker', '\nskills:\n  - tether-nx:beta\n  - tether-nx:missing'),
+    'plugins/tether-web/agents/worker.md': agent('worker', '\nskills:\n  - tether-nx:beta\n  - tether-nx:missing', 'Do the task.', WEB_SENTENCE),
   });
   assert.deepEqual(result, [
     'plugins/tether-web/agents/worker.md: skills entry "tether-nx:missing" has no folder plugins/tether-nx/skills/missing in dependency "tether-nx"',
@@ -137,6 +139,23 @@ test('a tether-nx skill or agent with the rules-file sentence twice is reported'
   assert.deepEqual(result, [
     'plugins/tether-nx/skills/beta/SKILL.md: the rules-file sentence occurs 2 times, not once',
     'plugins/tether-nx/agents/worker.md: the rules-file sentence occurs 2 times, not once',
+  ]);
+});
+
+test('RULES_SENTENCE stays the tether-nx sentence', () => {
+  assert.equal(RULES_SENTENCE, RULES_SENTENCES['tether-nx']);
+  assert.equal(WEB_SENTENCE, 'Read `.claude/tether-web.md` first; where it differs from this file, it wins.');
+});
+
+test('a tether-web skill or agent carries the tether-web sentence, not the tether-nx one', () => {
+  const result = findings({
+    'plugins/tether-web/skills/gamma/SKILL.md': doc('name: gamma\ndescription: Use when testing.', `# gamma\n\n${RULES_SENTENCE}`),
+    'plugins/tether-web/skills/delta/SKILL.md': doc('name: delta\ndescription: Use when testing.', `# delta\n\n${WEB_SENTENCE} If it does not exist, the defaults apply.`),
+    'plugins/tether-web/agents/worker.md': agent('worker', '', WEB_SENTENCE, WEB_SENTENCE),
+  });
+  assert.deepEqual(result, [
+    `plugins/tether-web/skills/gamma/SKILL.md: missing the rules-file sentence: ${WEB_SENTENCE}`,
+    'plugins/tether-web/agents/worker.md: the rules-file sentence occurs 2 times, not once',
   ]);
 });
 

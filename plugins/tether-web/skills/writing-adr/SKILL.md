@@ -5,7 +5,7 @@ description: Use when a decision spans more than one feature or reverses an earl
 
 # Writing an ADR
 
-Read `.claude/tether-nx.md` first; where it differs from this file, it wins.
+Read `.claude/tether-web.md` first; where it differs from this file, it wins.
 
 ## Overview
 

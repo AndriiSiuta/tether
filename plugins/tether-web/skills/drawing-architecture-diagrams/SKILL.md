@@ -5,7 +5,7 @@ description: Use when a spec, ADR, ARCHITECTURE.md, README or review needs a dia
 
 # Drawing Architecture Diagrams
 
-Read `.claude/tether-nx.md` first; where it differs from this file, it wins.
+Read `.claude/tether-web.md` first; where it differs from this file, it wins.
 
 ## Overview
 

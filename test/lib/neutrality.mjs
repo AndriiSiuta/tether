@@ -21,6 +21,8 @@ export const ALLOWED_SCOPES = new Set([
   'azure-devops',
   'anthropic-ai',
   'playwright',
+  'ngneat',
+  'angular-architects',
   'org',
 ]);
 

@@ -5,7 +5,7 @@ description: Use when a change, feature, or bug must be understood before it is 
 
 # Investigating Codebase
 
-Read `.claude/tether-nx.md` first; where it differs from this file, it wins.
+Read `.claude/tether-web.md` first; where it differs from this file, it wins.
 
 ## Overview
 
