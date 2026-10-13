@@ -18,6 +18,13 @@ Target is **WCAG 2.x AA**.
 > Targets Angular v17+ (standalone + signals). Accessibility is a requirement, not a polish step –
 > build it in from the first component.
 
+Where to read further (a local addendum; the vendored text below is unchanged):
+
+| Reference | What it holds | Read it when |
+|---|---|---|
+| `references/WCAG.md` | WCAG 2.2 success criteria by level, ARIA patterns per element, what changed from 2.1, testing tools | Checking a criterion's level or wording, or auditing against AA |
+| `references/A11Y-PATTERNS.md` | Framework-free code: modal focus trap, skip link, error handling, form labels, dragging alternatives, ARIA tabs, live regions, screen-reader commands | Building one of those patterns, or a review finds one missing |
+
 ## 0. Verify – don't assume
 
 a11y can't be eyeballed. Run all four:

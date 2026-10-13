@@ -4,6 +4,17 @@ Practical, copy-paste-ready patterns for common accessibility requirements. Each
 
 ---
 
+## Contents
+
+- [Modal focus trap](#modal-focus-trap)
+- [Skip link](#skip-link)
+- [Error handling](#error-handling)
+- [Form labels](#form-labels)
+- [Dragging movements](#dragging-movements)
+- [ARIA tabs](#aria-tabs)
+- [Live regions and notifications](#live-regions-and-notifications)
+- [Screen reader commands](#screen-reader-commands)
+
 ## Modal focus trap
 
 Trap keyboard focus inside a modal dialog so Tab/Shift+Tab cycle through its focusable elements and Escape closes it.
