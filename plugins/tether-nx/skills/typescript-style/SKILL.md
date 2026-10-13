@@ -30,6 +30,7 @@ State is a type, not a sentinel. A piece of code says what it holds: a discrimin
 ## Before you report a task done
 
 - The rules file's `verify` command (default in `angular-nx-conventions`) passes, and the folders you touched compile under `strictNullChecks` (`TS-1`).
+- Run this skill's `scripts/check-style.sh <touched .ts files>`: no hit is left except a table component's custom-sort callback.
 - No occurrence of `prefer-readonly`, `prefer-optional-chain`, `prefer-includes`, `switch-exhaustiveness-check`, `no-non-null-assertion`, `no-unneeded-ternary`, `no-param-reassign` in a file you touched.
 - Every state kind of a view union has a spec case.
 

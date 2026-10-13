@@ -2,6 +2,15 @@
 
 Each "before" is a pattern from an orders list table and its copies; each "after" is the shape the recipe asks for.
 
+## Contents
+
+- §1 [View state](#1-view-state)
+- §2 [Sort comparator](#2-sort-comparator)
+- §3 [Cell values and search](#3-cell-values-and-search)
+- §4 [Class toggles](#4-class-toggles)
+- §5 [Nullable at the edge](#5-nullable-at-the-edge)
+- §6 [Dialog column selection](#6-dialog-column-selection)
+
 ## 1. View state
 
 Before — three signals, `undefined` doubling as "not loaded yet", a boolean that some copies wrote without the error branch:
