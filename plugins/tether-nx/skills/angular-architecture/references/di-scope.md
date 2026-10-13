@@ -2,6 +2,15 @@
 
 Choosing an injector is choosing a lifetime. Pick the shortest one that spans every consumer.
 
+## Contents
+
+- [The three scopes](#the-three-scopes)
+- [Sharing across sibling routes](#sharing-across-sibling-routes)
+- [Root scope and manual teardown](#root-scope-and-manual-teardown)
+- [DestroyRef and cleanup](#destroyref-and-cleanup)
+- [Injection tokens for configuration](#injection-tokens-for-configuration)
+- [Guards, resolvers, and where they attach](#guards-resolvers-and-where-they-attach)
+
 ## The three scopes
 
 ```ts

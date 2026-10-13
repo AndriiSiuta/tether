@@ -2,6 +2,14 @@
 
 The full may-inject matrix, and the three refactors that come up most.
 
+## Contents
+
+- [May-inject matrix](#may-inject-matrix)
+- [Refactor 1: the store that reads another store](#refactor-1-the-store-that-reads-another-store)
+- [Refactor 2: the leaf that writes](#refactor-2-the-leaf-that-writes)
+- [Refactor 3: the cross-feature widget](#refactor-3-the-cross-feature-widget)
+- [Splitting a shared look across domains](#splitting-a-shared-look-across-domains)
+
 ## May-inject matrix
 
 Read a row as "a file of this layer may inject". Anything not listed is a boundary violation.

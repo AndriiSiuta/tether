@@ -1,6 +1,6 @@
 ---
 name: angular-architecture
-description: Use when deciding where an Angular file belongs or whether one part may import another - adding a feature or domain, splitting a screen into components, choosing root vs route-level vs component providers, placing shared kit vs feature UI, deciding which layer fetches data and which owns state, or untangling a cross-feature or circular import. Structural placement and dependency direction for Angular 17+ signal-era apps; for per-file API rules (signal syntax, control flow, OnPush) use the Angular team's angular-developer skill.
+description: Use when deciding where an Angular file belongs or whether one part may import another - adding a feature or domain, splitting a screen into components, choosing root vs route-level vs component providers, placing shared kit vs feature UI, or untangling a cross-feature or circular import.
 ---
 
 # Angular Architecture
@@ -16,7 +16,11 @@ Two invariants generate every rule below:
 1. **Dependencies point one way:** `app shell → feature → shared → core primitives`. Nothing in `shared/` knows a feature exists.
 2. **A file's right to inject is set by its layer, not by how many places use it.** "Three screens use it" makes something shared; it does not make it dumb, and it never licenses moving an injecting component into the shared kit.
 
-Long material: `references/layer-boundaries.md` (full may-inject matrix, cross-feature widgets, store-to-store fixes), `references/di-scope.md` (route-provider recipes and teardown).
+| Reference | What it holds | Read it when |
+|---|---|---|
+| `references/layer-boundaries.md` | The full may-inject matrix; refactors for a store reading a store, a leaf that writes, a cross-feature widget; splitting a shared look across domains | A placement under Layers or Shared kit is in doubt, or a review finds one of those three shapes |
+| `references/di-scope.md` | The three scopes in code, sibling-route sharing, root teardown, `DestroyRef`, configuration tokens, where guards and resolvers attach | Choosing or defending a provider scope, or writing a route's `providers` |
+| `references/bundle-budgets.md` | Lazy routes, the initial chunk, `@defer`, budgets in `angular.json` | Adding a route, a widget to an eager screen, or a heavy third-party dependency |
 
 ## Feature slicing
 
@@ -40,6 +44,8 @@ src/app/
 - A feature may depend on `shared/` and `core/`. Feature→feature is allowed only through the public entry point, and only downhill: if A and B import each other, the shared piece belongs in `shared/` (if presentational) or its own feature (if it has state). A project may forbid feature→feature outright and route every reuse through the other feature's data layer; then its own boundary check is the rule, and it is stricter than this one.
 - `core/` holds what the app boots with. A store that only two screens use is not core.
 
+A widget another feature renders, and what stays in its owner: `references/layer-boundaries.md` § Refactor 3.
+
 ## Layers and the talk rule
 
 | Layer             | Owns                                                        | May inject                                                                | Must not inject                                         |
@@ -57,6 +63,8 @@ Three rules do the real work:
 - **Presentational components emit intent; they do not perform writes.** A leaf row that injects the store and calls `store.toggle()` looks convenient and costs you the ability to render that row anywhere else. Inputs down, outputs up, the container calls the store.
 
 **A container is the component a screen hands a whole region to** — at most one per region, and the thing you would mount on its own to render that region. **If it takes one record as `input()` and appears inside a `@for`, it is a leaf**, whatever it is called. "This row owns its own writes, like the card next door" is the rationalization that dissolves the boundary one component at a time.
+
+The full matrix and the store-to-store and leaf-that-writes fixes: `references/layer-boundaries.md` § May-inject matrix, § Refactor 1, § Refactor 2.
 
 ## Routing and DI placement
 
@@ -95,6 +103,8 @@ Navigating away from the whole group destroys the store; navigating between the 
 
 Route params reach a page as `input()` via `withComponentInputBinding()` — not by injecting `ActivatedRoute` and subscribing. Guards protect routes; resolvers only for data the page cannot render without.
 
+Each scope in code, root teardown, `DestroyRef`, configuration tokens, guards and resolvers: `references/di-scope.md`.
+
 ## Signal boundaries per layer
 
 Which primitive belongs where is a layering question, not a style one.
@@ -124,13 +134,11 @@ State that is derived from other state is never stored: `computed()`. A `signal`
 
 If two features need the same _look_ but different domain types, the shared piece is a dumb component parameterised by primitives; each feature keeps a thin wrapper that maps its own type into it. Copy-pasting the sibling's component into your feature is the right call only when the shapes are genuinely unrelated — say so explicitly, don't drift into it.
 
+The cross-feature widget and the shared look across domains, worked through: `references/layer-boundaries.md` § Refactor 3, § Splitting a shared look across domains.
+
 ## Bundle budgets and lazy loading
 
-- Every feature route lazy (`loadChildren` / `loadComponent`). The initial bundle is the shell, router, core singletons and the first screen.
-- **A widget rendered by an eagerly-loaded shell or the landing screen is in the initial chunk.** Cross-feature summary widgets on a dashboard are the usual way a "lazy" feature ends up eager — check the chunk before adding one.
-- `@defer` for heavy below-fold content and anything pulling a large third-party dependency (editors, charts, maps); `on viewport` / `on interaction` over `on immediate`.
-- Keep budgets in `angular.json` (`initial` and `anyComponentStyle`) and read the size table on every build — a new warning is a finding, not noise.
-- Root-provided services land in whichever chunk first injects them and are shared after; they are not a reason to keep a feature eager.
+Lazy routes, the initial chunk, `@defer` and budgets: `references/bundle-budgets.md`.
 
 ## Quick Reference
 
