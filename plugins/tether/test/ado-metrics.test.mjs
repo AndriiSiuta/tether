@@ -128,6 +128,15 @@ test('run writes the month file from injected az and HTTP, and never shows the t
   assert.match(wiql, /'ai-escape'.*>= '2026-10-01'.*< '2026-11-01'/);
 });
 
+test('an empty az answer to the escape query counts as zero escapes, not a parse error', async () => {
+  const root = project();
+  const az = (args) => (args[0] === 'boards' ? '' : fakeAz([])(args));
+  const result = await run(['--month', '2026-10'], { cwd: root, az, http: fakeHttp([]) });
+  assert.equal(result.code, 0, result.err.join('\n'));
+  const md = readFileSync(join(root, 'reports', '2026-10-metrics.md'), 'utf8');
+  assert.match(md, /`ai-escape` bugs created \| 0 \|/);
+});
+
 test('a failed GET reports without the token', async () => {
   const root = project();
   const http = async () => {

@@ -128,7 +128,8 @@ export async function defaultHttp(url, token) {
 }
 
 function azJson(az, args) {
-  return JSON.parse(az([...args, '-o', 'json']));
+  const out = az([...args, '-o', 'json']).trim();
+  return out === '' ? [] : JSON.parse(out);
 }
 
 export function accessToken(az) {
