@@ -1,0 +1,10 @@
+{
+  "name": "tether-mobile",
+  "version": "0.1.0",
+  "description": "Workflow agents and process skills for a React Native app: investigator, spec-writer, planner, plan-validator, implementers, two reviewers and pr-creator, driven by a per-project .claude/tether-mobile.md rules file.",
+  "author": {
+    "name": "Andrii Siuta"
+  },
+  "license": "MIT",
+  "dependencies": ["tether-rn"]
+}

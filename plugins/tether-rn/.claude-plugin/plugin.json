@@ -1,0 +1,9 @@
+{
+  "name": "tether-rn",
+  "version": "0.1.0",
+  "description": "React Native rules for Claude Code agents: layers and the import test, one transport identity, native capability wrappers, state placement, navigation params and deep links, build-time config and secrets; the agents that apply them live in tether-mobile. A project overrides any rule in .claude/tether-rn.md.",
+  "author": {
+    "name": "Andrii Siuta"
+  },
+  "license": "MIT"
+}

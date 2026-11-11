@@ -2,6 +2,14 @@
 
 All notable changes to the `tether` marketplace and its plugins. Versions follow the plugins' `version` fields; tags cover the whole repository.
 
+## Unreleased
+
+### tether-rn 0.1.0
+- New plugin: React Native rules as skills. `react-native-conventions` holds the rule ids (`LAY`, `NET`, `DEV`, `STATE`, `NAV`, `CMP`, `CFG`, `LOG`, `COPY`, `NAT`, `TEST`, `TS`, `GUARD`) and the `.claude/tether-rn.md` keys, among them `layout`, which maps the four layers to a repository's real folders. `react-native-architecture` gives the reasoning; `typescript-style` covers TypeScript in a React Native app.
+
+### tether-mobile 0.1.0
+- New plugin: the `tether-web` workflow for a React Native app. Nine agents (no ui-checker: `UI:` lines are steps the owner runs on a simulator or emulator), the process skills, a default constitution for React Native and `testing-jest-rntl`. A change under `android/` or `ios/` is its own task, and no agent runs a device build. No eval cases yet.
+
 ## v0.4.4
 
 ### tether-web 0.2.0

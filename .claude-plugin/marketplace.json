@@ -1,6 +1,6 @@
 {
   "name": "tether",
-  "description": "Claude Code plugins: tether, project-neutral guards, telemetry and evals configured per project; tether-nx, Angular and Nx rules; and tether-web, the workflow agents and process skills that apply them.",
+  "description": "Claude Code plugins: tether, project-neutral guards, telemetry and evals configured per project; tether-nx, Angular and Nx rules; tether-web, the workflow agents and process skills that apply them; tether-rn, React Native rules; and tether-mobile, the workflow agents for a React Native app.",
   "owner": {
     "name": "Andrii Siuta"
   },
@@ -19,6 +19,16 @@
       "name": "tether-web",
       "source": "./plugins/tether-web",
       "description": "Workflow agents and process skills for a web front end: investigator, spec-writer, planner, plan-validator, implementers, two reviewers, ui-checker and pr-creator, driven by a per-project .claude/tether-web.md rules file. Depends on tether-nx and the official nx plugin."
+    },
+    {
+      "name": "tether-rn",
+      "source": "./plugins/tether-rn",
+      "description": "React Native rules for Claude Code agents: layers and the import test, one transport identity, native capability wrappers, state placement, navigation params and deep links, build-time config and secrets; the agents that apply them live in tether-mobile. A project overrides any rule in .claude/tether-rn.md."
+    },
+    {
+      "name": "tether-mobile",
+      "source": "./plugins/tether-mobile",
+      "description": "Workflow agents and process skills for a React Native app: investigator, spec-writer, planner, plan-validator, implementers, two reviewers and pr-creator, driven by a per-project .claude/tether-mobile.md rules file. Depends on tether-rn."
     }
   ],
   "renames": {
