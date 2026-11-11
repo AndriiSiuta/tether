@@ -2,7 +2,7 @@
 
 All notable changes to the `tether` marketplace and its plugins. Versions follow the plugins' `version` fields; tags cover the whole repository.
 
-## Unreleased
+## v0.5.0
 
 ### tether-rn 0.1.0
 - New plugin: React Native rules as skills. `react-native-conventions` holds the rule ids (`LAY`, `NET`, `DEV`, `STATE`, `NAV`, `CMP`, `CFG`, `LOG`, `COPY`, `NAT`, `TEST`, `TS`, `GUARD`) and the `.claude/tether-rn.md` keys, among them `layout`, which maps the four layers to a repository's real folders. `react-native-architecture` gives the reasoning; `typescript-style` covers TypeScript in a React Native app.

@@ -17,7 +17,7 @@ claude plugin install tether-web@tether --scope local
 From GitHub, pinned to a tag:
 
 ```
-claude plugin marketplace add AndriiSiuta/tether#v0.4.4
+claude plugin marketplace add AndriiSiuta/tether#v0.5.0
 claude plugin install tether-nx@tether --scope local
 claude plugin install tether-web@tether --scope local
 ```
