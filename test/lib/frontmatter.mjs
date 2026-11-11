@@ -5,6 +5,8 @@ import { basename, dirname, join, relative, resolve } from 'node:path';
 export const RULES_SENTENCES = {
   'tether-nx': 'Read `.claude/tether-nx.md` first; where it differs from this file, it wins.',
   'tether-web': 'Read `.claude/tether-web.md` first; where it differs from this file, it wins.',
+  'tether-rn': 'Read `.claude/tether-rn.md` first; where it differs from this file, it wins.',
+  'tether-mobile': 'Read `.claude/tether-mobile.md` first; where it differs from this file, it wins.',
 };
 export const RULES_SENTENCE = RULES_SENTENCES['tether-nx'];
 

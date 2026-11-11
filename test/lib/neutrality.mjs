@@ -22,6 +22,7 @@ export const ALLOWED_SCOPES = new Set([
   'anthropic-ai',
   'playwright',
   'ngneat',
+  'react-navigation',
   'angular-architects',
   'org',
 ]);

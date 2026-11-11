@@ -60,13 +60,17 @@ The rules live in `plugins/tether-nx/skills/angular-nx-conventions/SKILL.md`, ea
 - **To retire a rule**, mark it deprecated in the table with the id that replaces it, if any, and keep the row; remove the reviewer row only in a later minor release.
 - **To add a rule**, take the next free number in its family (`FEAT-4` after `FEAT-3`), add it to the conventions table and the reviewer's `Mode: conventions` table in the same commit, and say which guard, if any, enforces it.
 
+## tether-rn rule ids
+
+The rules live in `plugins/tether-rn/skills/react-native-conventions/SKILL.md`. The same four points hold as for `tether-nx`: ids are stable, a rule that changes what it requires gets a new id, a retired rule keeps its row, and a new rule takes the next free number in its family and is added to the `tether-mobile` conventions reviewer's list in the same commit.
+
 ## Agents and skills
 
 Every `tether-nx` agent and skill keeps this sentence, exactly once, near the top of its body:
 
 > Read `.claude/tether-nx.md` first; where it differs from this file, it wins.
 
-`test/frontmatter.test.mjs` fails without it, and it also checks names, descriptions and reference links. The plugin has eval cases under `plugins/tether-nx/evals/`; see that README's Evals section before you change an agent's output contract.
+`tether-web`, `tether-rn` and `tether-mobile` files carry the same sentence with their own rules file. `test/frontmatter.test.mjs` fails without it, and it also checks names, descriptions and reference links. The plugin has eval cases under `plugins/tether-nx/evals/`; see that README's Evals section before you change an agent's output contract.
 
 ## Pull requests
 
